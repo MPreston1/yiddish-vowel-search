@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Yiddish Vowel Search</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vowel Search">
+<meta name="theme-color" content="#16324f">
+<script>
+// Pick the starting mode before first paint: #length / #oy in the address, else the last one used.
+(function(){var m='l';try{var h=location.hash.slice(1);m=h==='oy'?'o':h==='length'?'l':(localStorage.getItem('vowelMode')||'l')}catch(e){}
+m=m==='o'?'o':'l';document.documentElement.dataset.mode=m;
+var t=document.querySelector('meta[name=theme-color]');if(t)t.content=m==='o'?'#4a2a73':'#16324f'})();
+</script>
+<style>
+:root{--modeh:56px}
+html[data-mode=l]{--bg:#eceff3;--card:#fff;--ink:#16202b;--mut:#5d6b79;--line:#d5dce4;--acc:#16324f;--ok:#1f7a4d;--okbg:#e0f2e8;--warn:#9a5200;--warnbg:#fdeccf;--na:#55606b;--nabg:#e6e9ed}
+html[data-mode=o]{--bg:#efecf3;--card:#fff;--ink:#1c1726;--mut:#675f75;--line:#dad4e3;--acc:#4a2a73;--ok:#1f7a4d;--okbg:#e0f2e8;--warn:#9a5200;--warnbg:#fdeccf;--na:#675f75;--nabg:#e9e5ef}
+@media(prefers-color-scheme:dark){
+html[data-mode=l]{--bg:#10151b;--card:#192029;--ink:#e8edf2;--mut:#93a1af;--line:#2a3541;--acc:#9cc2ee;--ok:#7fd3a3;--okbg:#17372a;--warn:#f1b266;--warnbg:#3d2a10;--na:#a3afbb;--nabg:#242d37}
+html[data-mode=o]{--bg:#131018;--card:#1d1925;--ink:#ece8f2;--mut:#a398b3;--line:#2f2839;--acc:#c7a9f0;--ok:#7fd3a3;--okbg:#17372a;--warn:#f1b266;--warnbg:#3d2a10;--na:#a398b3;--nabg:#272031}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+button{font:inherit;cursor:pointer}
+
+/* ---- mode switch ---- */
+html[data-mode=l] #app-o,html[data-mode=o] #app-l{display:none}
+#modebar{position:sticky;top:env(safe-area-inset-top,0px);z-index:4;height:var(--modeh);padding:8px 16px 6px;background:var(--bg)}
+#modebar .in{max-width:680px;margin:0 auto;height:100%;display:flex;border:2px solid var(--acc);border-radius:12px;overflow:hidden;background:var(--card)}
+#modebar button{flex:1;border:0;background:none;color:var(--acc);font-size:15px;font-weight:600;padding:0 8px}
+#modebar button+button{border-left:2px solid var(--acc)}
+html[data-mode=l] #mode-l,html[data-mode=o] #mode-o{background:var(--acc);color:var(--card)}
+@media(max-width:520px){#modebar{padding:8px 8px 6px}}
+
+/* ---- shared by both apps ---- */
+.app{max-width:680px;margin:0 auto;padding:16px}
+.app header{position:sticky;top:calc(var(--modeh) + env(safe-area-inset-top,0px));background:var(--bg);padding:12px 0 10px;z-index:2}
+.app h1{font-size:19px;line-height:1.3;margin:6px 0 0;color:var(--acc)}
+.app input{width:100%;font:inherit;font-size:20px;padding:14px 16px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+.app input:focus{outline:none;border-color:var(--acc)}
+.qrow{display:flex;gap:8px;align-items:stretch}
+.qrow input{flex:1;min-width:0;width:auto}
+.yid-toggle{flex:none;min-width:48px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--mut);font-size:20px;font-weight:600;padding:0 12px}
+.yid-toggle.on{background:var(--acc);border-color:var(--acc);color:var(--card)}
+.app input.yid-on{border-color:var(--acc)}
+.status{display:flex;justify-content:space-between;gap:8px;color:var(--mut);font-size:13px;margin-top:8px;min-height:20px}
+.refresh{background:none;border:0;color:var(--acc);font-size:13px;padding:0}
+.tabs{display:flex;gap:6px;margin-top:10px}
+.tabs button{flex:1;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--mut);font-weight:600}
+.tabs button.on{background:var(--acc);color:var(--card);border-color:var(--acc)}
+.card,.note{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:0 0 12px}
+.word{font:600 34px/1.2 "Frank Ruhl Libre","David","Times New Roman",serif;direction:rtl;text-align:right;margin:0 0 8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+dl{display:grid;grid-template-columns:7.5rem 1fr;gap:6px 12px;margin:0}
+dt{color:var(--mut);font-size:14px}
+dd{margin:0;overflow-wrap:anywhere}
+.empty{color:var(--mut)}
+.badge{display:inline-block;padding:1px 10px;border-radius:99px;font-size:14px;font-weight:600}
+.msg{text-align:center;color:var(--mut);padding:32px 8px}
+.more{display:block;margin:4px auto 24px;padding:10px 20px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--acc)}
+button.rulelink{background:none;border:0;padding:0;font:inherit;color:var(--acc);text-decoration:underline;text-align:start;cursor:pointer}
+.tw{overflow-x:auto;margin:0 0 16px}
+table{border-collapse:collapse;width:100%;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px;text-align:start;vertical-align:top}
+th{background:var(--nabg)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:10;padding:env(safe-area-inset-top) 8px env(safe-area-inset-bottom)}
+@media(min-width:600px){.ov{align-items:center}}
+.modal{position:relative;background:var(--card);color:var(--ink);border-radius:14px;max-width:640px;width:100%;max-height:85vh;overflow:auto;padding:18px 18px 20px;margin-bottom:8px}
+.modal h3{margin:0 38px 12px 0;font-size:18px;line-height:1.3;overflow-wrap:anywhere}
+.x{position:absolute;top:8px;right:8px;width:34px;height:34px;border:0;border-radius:50%;background:var(--nabg);color:var(--ink);font-size:22px;line-height:1;padding:0}
+.rl{color:var(--mut);font-size:13px;margin-bottom:2px}
+.tools{display:flex;gap:20px;justify-content:center;padding:8px 0 0}
+.tools button{background:none;border:0;color:var(--acc);font-size:13px;padding:4px}
+.credit{color:var(--mut);font-size:12px;text-align:center;padding:8px 0 28px}
+.he{direction:rtl;unicode-bidi:isolate}
+
+/* ---- Vowel length (LOKSHN) only ---- */
+.helpbtn{display:block;width:100%;margin-top:8px;padding:9px 12px;border:1px solid var(--acc);border-radius:10px;background:var(--card);color:var(--acc);font-size:15px;font-weight:600}
+.sound{color:var(--mut);font-style:italic}
+.yes{background:var(--okbg);color:var(--ok)}.exc{background:var(--warnbg);color:var(--warn)}.na{background:var(--nabg);color:var(--na)}
+.app-l th,.app-l td{white-space:pre-line}
+.cap{font-weight:700;font-size:14px;letter-spacing:.02em;margin:0 0 6px}
+.fn{display:flex;gap:8px;margin:0 0 10px}.fn:last-child{margin:0}
+.lb{flex:none;min-width:1.6em;text-align:end;color:var(--mut)}
+.tx{flex:1;min-width:0;white-space:pre-line;overflow-wrap:anywhere}
+.rf{margin:0 0 12px}.rt{white-space:pre-line;overflow-wrap:anywhere}
+button.wbtn{flex:1;padding:12px;font:inherit;font-size:17px;font-weight:600;border-radius:10px;border:1px solid var(--acc);background:var(--card);color:var(--acc);cursor:pointer}
+.wiz{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:0 0 12px}
+.wmut{color:var(--mut);font-size:14px;margin:0 0 10px}
+.wq{font-size:19px;font-weight:600;margin:0 0 14px}
+.wrow{display:flex;gap:10px}
+.wnav{display:flex;gap:18px;margin-top:14px}
+.wnav button{background:none;border:0;color:var(--acc);font:inherit;font-size:14px;padding:4px 0;cursor:pointer}
+.wh{font-weight:700;font-size:17px;margin:0 0 6px}
+.wd{white-space:pre-line;margin:0 0 14px;overflow-wrap:anywhere}
+.wn{background:var(--nabg);border-radius:8px;padding:8px 10px;margin:0 0 12px;font-size:14px}
+.wo{font-size:22px;font-weight:700;margin:2px 0 14px;white-space:pre-line}
+.wlab{color:var(--mut);font-size:13px;margin:0 0 2px}
+.wo a,.rt a{color:var(--acc);text-decoration:underline}
+@media(max-width:520px){.app-l{padding:12px 8px}.app-l table{font-size:13px}.app-l th,.app-l td{padding:4px 3px}}
+
+/* ---- Oy vowel only ---- */
+.app-o .badge{background:var(--nabg);color:var(--ink)}
+.app-o .rl{margin:10px 0 2px}
+.der{color:var(--mut)}
+.sub{color:var(--mut);font-size:13px;margin:10px 0 0}
+.sec{font-weight:700;font-size:14px;margin:12px 0 6px;color:var(--mut);letter-spacing:.02em}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{padding:3px 10px;border:1px solid var(--line);border-radius:99px;background:var(--bg);color:var(--ink);font:18px "Frank Ruhl Libre","David",serif;direction:rtl}
+.gb{margin-top:10px;padding:8px 14px;border:1px solid var(--acc);border-radius:8px;background:var(--card);color:var(--acc);font-size:14px;font-weight:600}
+.gt{font-weight:700;margin:0 0 4px}
+.pre{white-space:pre-line;overflow-wrap:anywhere}
+@media(max-width:520px){.app-o{padding:12px 8px}.app-o table{font-size:14px}}
+</style>
+</head>
+<body>
+<div id="modebar"><div class="in" role="tablist" aria-label="Choose a tool">
+<button type="button" id="mode-l" data-m="l" role="tab">Vowel length</button>
+<button type="button" id="mode-o" data-m="o" role="tab">Oy vowel <span class="he" lang="yi">וי</span></button>
+</div></div>
+<section class="app app-l" id="app-l">
+<h1>Searchable Companion Database for the L.O.K.SH.N Guide to Vowel Length</h1>
+<header>
+<div class="qrow" id="l-qrow"><input id="l-q" type="search" dir="auto" lang="yi" placeholder="Search a Yiddish word…" autocomplete="off" autocapitalize="off" spellcheck="false">
+<button type="button" id="l-yid-toggle" class="yid-toggle" title="Toggle Yiddish typing (or type ~)" aria-pressed="false" aria-label="Toggle Yiddish typing">A</button></div>
+<button type="button" id="l-helpbtn" class="helpbtn">Help me find the rule</button>
+<div class="status"><span id="l-count"></span><button id="l-refresh" class="refresh" type="button">Refresh data</button></div>
+<nav class="tabs" id="l-tabs"><button type="button" data-v="search" class="on">Search</button><button type="button" data-v="tables">Tables</button><button type="button" data-v="notes">Footnotes</button></nav>
+</header>
+<div id="l-results"></div>
+<button id="l-more" class="more" type="button" hidden>Show more</button>
+<div id="l-tables" hidden></div>
+<div id="l-notes" hidden></div>
+<footer class="tools"><button type="button" id="l-exp">Export data</button><button type="button" id="l-imp">Import data</button><input type="file" id="l-impfile" accept=".json,application/json" hidden></footer>
+<p class="credit">Based on the “L.O.K.SH.N Guide to Vowel Length” and the “Companion Database for the L.O.K.SH.N Guide to Vowel Length,” both compiled by Arun (Arele) Schaechter Viswanath.</p>
+</section>
+<section class="app app-o" id="app-o">
+<h1>Oy Search: the <span class="he" lang="yi">וי</span> vowel by dialect</h1>
+<header>
+<div class="qrow" id="o-qrow"><input id="o-q" type="search" dir="auto" lang="yi" placeholder="Search a Yiddish word…" autocomplete="off" autocapitalize="off" spellcheck="false">
+<button type="button" id="o-yid-toggle" class="yid-toggle" title="Toggle Yiddish typing (or type ~)" aria-pressed="false" aria-label="Toggle Yiddish typing">A</button></div>
+<div class="status"><span id="o-count"></span><button id="o-refresh" class="refresh" type="button">Refresh data</button></div>
+<nav class="tabs" id="o-tabs"><button type="button" data-v="search" class="on">Search</button><button type="button" data-v="groups">Groups</button><button type="button" data-v="pairs">Pairs</button></nav>
+</header>
+<div id="o-results"></div>
+<button id="o-more" class="more" type="button" hidden>Show more</button>
+<div id="o-groups" hidden></div>
+<div id="o-pairs" hidden></div>
+<footer class="tools"><button type="button" id="o-exp">Export data</button><button type="button" id="o-imp">Import data</button><input type="file" id="o-impfile" accept=".json,application/json" hidden></footer>
+<p class="credit">Based on “Oy!: a self-directed guide to the <span class="he">וי</span> vowel for dialect-aspirers,” compiled by Arele Schaechter Viswanath.</p>
+</section>
+<script src="jszip.min.js"></script>
+<script>
+// ---- shared helpers ----
+function kv(name){
+ const open=()=>new Promise((res,rej)=>{const r=indexedDB.open(name,1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+ return {
+  async get(k){const db=await open();return new Promise((res,rej)=>{const r=db.transaction('kv').objectStore('kv').get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
+  async set(k,v){const db=await open();return new Promise((res,rej)=>{const t=db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})}
+ }}
+function parseCSV(t){const out=[];let r=[],f='',q=false;
+ for(let i=0;i<t.length;i++){const c=t[i];
+  if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
+  else if(c=='"')q=true;
+  else if(c==','){r.push(f);f=''}
+  else if(c=='\n'){r.push(f);out.push(r);r=[];f=''}
+  else if(c!='\r')f+=c}
+ if(f||r.length){r.push(f);out.push(r)}return out}
+
+// ---- Yiddish typing mode (Yiddish Klal layout), shared by both tools: type ~ to toggle, ~~ for a literal ~
+// Maps physical keys (event.code) to [plain, shift, option, shift+option]; other keys type normally.
+const YK_MAP={KeyA:['אַ','א'],KeyS:['ס','ת'],KeyD:['ד','דזש'],KeyF:['פֿ','ף'],KeyG:['ג','דזש'],KeyH:['ה','ח'],KeyJ:['ײ','דזש'],KeyK:['ק','כּ'],KeyL:['ל','ל'],KeyQ:['ק','כּ'],KeyW:['ש','שׂ'],KeyE:['ע','ײ'],KeyR:['ר','טש'],KeyT:['ט','תּ','תֿ'],KeyY:['ײַ','ױ'],KeyU:['ו','וּ'],KeyI:['י','יִ'],KeyO:['אָ','ױ'],KeyP:['פּ','פ'],KeyZ:['ז','זש'],KeyX:['כ','ך','כֿ'],KeyC:['צ','ץ'],KeyV:['װ','בֿ'],KeyB:['ב','בּ'],KeyN:['נ','ן'],KeyM:['מ','ם'],
+ Minus:['־','-','–','—'],Equal:['=','+','⸗'],BracketLeft:['[','„','{','’'],BracketRight:[']','“','}','”'],Backslash:['\\','|','׳','״'],Quote:["'",'"','′','″'],Semicolon:[';',':','…']};
+
+const YT=(()=>{
+ let on=false,lastTilde=false;const pairs=[];
+ try{const v=localStorage.getItem('yiddishTyping');
+  on=v!==null?v==='1':(localStorage.getItem('lokshnYiddishTyping')==='1'||localStorage.getItem('oyYiddishTyping')==='1')}catch(e){}
+ function paint(){for(const [inp,b] of pairs){b.textContent=on?'א':'A';b.classList.toggle('on',on);b.setAttribute('aria-pressed',on);inp.classList.toggle('yid-on',on)}}
+ function set(v){on=v;try{localStorage.setItem('yiddishTyping',v?'1':'0')}catch(e){}paint()}
+ function insert(inp,text){let ok=false;try{ok=document.execCommand('insertText',false,text)}catch(e){}
+  if(!ok){const a=inp.selectionStart==null?inp.value.length:inp.selectionStart,b=inp.selectionEnd==null?a:inp.selectionEnd;inp.setRangeText(text,a,b,'end');inp.dispatchEvent(new Event('input',{bubbles:true}))}}
+ function attach(inp,btn){
+  pairs.push([inp,btn]);
+  inp.addEventListener('keydown',e=>{
+   if(e.isComposing||e.ctrlKey||e.metaKey)return;
+   if(e.key==='~'){e.preventDefault();if(e.repeat)return;
+    if(lastTilde){lastTilde=false;set(!on);insert(e.target,'~')}else{lastTilde=true;set(!on)}return}
+   if(['Shift','Alt','Control','Meta','CapsLock'].includes(e.key))return;
+   lastTilde=false;
+   if(!on||e.getModifierState('CapsLock'))return;
+   const m=YK_MAP[e.code];if(!m)return;
+   const out=e.altKey?(e.shiftKey?m[3]:m[2]):(e.shiftKey?m[1]:m[0]);
+   if(!out)return;e.preventDefault();insert(e.target,out)});
+  btn.addEventListener('mousedown',e=>e.preventDefault());
+  btn.addEventListener('click',()=>{set(!on);inp.focus()});
+  paint()}
+ return {attach}})();
+
+// ---- mode switch: Vowel length / Oy vowel ----
+(function(){
+ const NAMES={l:'length',o:'oy'},COLORS={l:'#16324f',o:'#4a2a73'},H=document.documentElement;
+ function paint(m){
+  for(const b of document.querySelectorAll('#modebar button'))b.setAttribute('aria-selected',b.dataset.m===m);
+  const t=document.querySelector('meta[name=theme-color]');if(t)t.content=COLORS[m]}
+ function setMode(m,fromHash){
+  H.dataset.mode=m;paint(m);
+  try{localStorage.setItem('vowelMode',m)}catch(e){}
+  if(!fromHash)history.replaceState(null,'','#'+NAMES[m]);
+  window.scrollTo(0,0);
+  if(matchMedia('(pointer:fine)').matches){const q=document.getElementById(m+'-q');if(q)q.focus()}}
+ document.getElementById('modebar').addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.dataset.m&&b.dataset.m!==H.dataset.mode)setMode(b.dataset.m)});
+ addEventListener('hashchange',()=>{const h=location.hash.slice(1),m=h==='oy'?'o':h==='length'?'l':null;if(m&&m!==H.dataset.mode)setMode(m,true)});
+ paint(H.dataset.mode);
+})();
+
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+
+(function(){
+const SHEET_ID='1Vip_J4QjpMBorfov15jmbXouSXQMAmMXT0EbYsYfPkc',GID='671156978';
+const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&gid=${GID}`;
+const CACHE_KEY='vowel-lookup-v1',PAGE=50;
+// Slide 2 tables and footnotes are read from this PowerPoint file (same folder as index.html).
+const PPTX_URL='guide.pptx',SLIDE_NO=2;
+// Columns are found by header name; letter positions (A,B,C,D,P,Q,R) are the fallback.
+const COLS={word:[['word'],0],gloss:[['gloss'],1],comp:[['component'],2],pos:[['part of speech'],3],rule:[['associated rule'],15],follows:[['follows rule?','follows rule'],16],notes:[['notes'],17]};
+const {get:idbGet,set:idbSet}=kv('vowel-lookup');
+let rows=[],matches=[],shown=0,sheetAt=0;
+const root=document.getElementById('app-l'),$=id=>document.getElementById('l-'+id);
+
+
+const norm=s=>(s||'').normalize('NFD').replace(/[\u0591-\u05C7]/g,'').replace(/\u05F0/g,'וו').replace(/\u05F1/g,'וי').replace(/\u05F2/g,'יי').replace(/[\s\-()]/g,'').toLowerCase();
+
+function build(csv){
+ const t=parseCSV(csv),head=t[0].map(h=>h.trim().toLowerCase()),idx={};
+ for(const k in COLS){const [names,fb]=COLS[k];const i=head.findIndex(h=>names.includes(h));idx[k]=i>=0?i:fb}
+ // Sound columns (E, F, H, I, K, L, N, O) are found by header; those letters are the fallback.
+ const sNames=['short [o]','long [o]','short [e]','long [e]','short [i]','long [i]','short [u]','long [u]'],sFound=sNames.map(n=>head.indexOf(n)),sIdx=sFound.every(i=>i>=0)?sFound:[4,5,7,8,10,11,13,14];
+ return t.slice(1).filter(r=>(r[idx.word]||'').trim()).map(r=>{
+  const o={};for(const k in idx)o[k]=(r[idx[k]]||'').trim();
+  o.sounds=[];for(const i of sIdx){const v=(r[i]||'').trim();if(v)o.sounds.push([(t[0][i]||'').trim(),v])}
+  o.nw=norm(o.word);o.ng=norm(o.gloss);return o})}
+
+function setStatus(msg){$('count').textContent=msg}
+
+async function load(force){
+ if(!force){try{const c=await idbGet(CACHE_KEY);if(c&&c.rows){rows=c.rows;sheetAt=c.at;setStatus(`${rows.length} entries (saved ${new Date(c.at).toLocaleDateString()})`);search()}}catch(e){}}
+ try{
+  setStatus(rows.length?'Updating…':'Loading data…');
+  const res=await fetch(CSV_URL);if(!res.ok)throw new Error(res.status);
+  const text=await res.text();
+  if(text.trim().startsWith('<'))throw new Error('Sheet is not public');
+  rows=build(text);sheetAt=Date.now();
+  try{await idbSet(CACHE_KEY,{at:sheetAt,rows})}catch(e){}
+  setStatus(`${rows.length} entries · up to date`);search();
+ }catch(e){
+  setStatus(rows.length?`Offline — using saved data (${rows.length} entries)`:'Could not load the spreadsheet. Check that it is shared as “Anyone with the link can view”.');
+ }}
+
+function search(){
+ const raw=$('q').value.trim(),q=norm(raw);
+ if(!q){matches=[];$('results').innerHTML=rows.length?'<p class="msg">Type a Yiddish word to search. Partial matches are included.</p>':'';$('more').hidden=true;return}
+ const latin=/[a-z]/i.test(raw),key=latin?'ng':'nw',m=[];
+ for(const r of rows){const s=r[key];if(!s)continue;const p=s.indexOf(q);if(p<0)continue;m.push([s===q?0:p===0?1:2,s.length,r])}
+ m.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+ matches=m.map(x=>x[2]);shown=0;$('results').innerHTML='';
+ if(!matches.length){const R=$('results');R.innerHTML='';R.append(el('p','msg','No matches.'));
+  $('more').hidden=true;return}
+ more();
+}
+function more(){
+ const frag=document.createDocumentFragment();
+ for(const r of matches.slice(shown,shown+PAGE))frag.append(card(r));
+ shown=Math.min(shown+PAGE,matches.length);$('results').append(frag);
+ $('more').hidden=shown>=matches.length;
+ $('more').textContent=`Show more (${matches.length-shown} left)`;
+}
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function card(r){
+ const c=el('article','card'),w=el('h2','word',r.word);w.lang='yi';c.append(w);
+ const dl=el('dl');
+ const row=(label,val,node)=>{dl.append(el('dt',null,label));const d=el('dd');
+  if(node)d.append(node);else if(val)d.textContent=val;else{d.className='empty';d.textContent='—'}dl.append(d)};
+ row('Gloss',r.gloss);row('Component',r.comp);row('Part of speech',r.pos);
+ const sn=(r.sounds||[]).length?el('div'):null;
+ if(sn)for(const [h,v] of r.sounds)sn.append(el('div',null,h?`${h} - ${v}`:v));
+ row('Sound',null,sn);
+ const rl=r.rule?findRule(r.rule):null;
+ if(rl){const rb=el('button','rulelink',r.rule);rb.type='button';rb.dir='auto';rb.onclick=()=>showRule(rl);row('Associated rule',null,rb)}
+ else row('Associated rule',r.rule);
+ let fb=null;if(r.follows){const v=r.follows.toLowerCase();fb=el('span','badge '+(v.startsWith('yes')?'yes':v.startsWith('exception')?'exc':'na'),r.follows)}
+ row('Follows rule?',null,fb);
+ row('Notes',r.notes);
+ c.append(dl);return c}
+
+
+// ---- Slide 2: tables and footnotes, read from the .pptx ----
+const NS_A='http://schemas.openxmlformats.org/drawingml/2006/main',NS_P='http://schemas.openxmlformats.org/presentationml/2006/main',NS_R='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+let slide=null,slideErr='';
+const kids=(n,ns,name)=>[...n.children].filter(c=>c.localName===name&&c.namespaceURI===ns);
+const first=(n,ns,name)=>n.getElementsByTagNameNS(ns,name)[0];
+function parasOf(body){
+ return kids(body,NS_A,'p').map(p=>{
+  const pPr=kids(p,NS_A,'pPr')[0],an=pPr&&kids(pPr,NS_A,'buAutoNum')[0],r=[];
+  for(const c of p.children){if(c.namespaceURI!==NS_A)continue;
+   if(c.localName==='r'){const rp=kids(c,NS_A,'rPr')[0],t=kids(c,NS_A,'t')[0];
+    r.push({t:t?t.textContent:'',b:rp&&rp.getAttribute('b')==='1'?1:0,i:rp&&rp.getAttribute('i')==='1'?1:0,s:rp&&+rp.getAttribute('baseline')>0?1:0})}
+   else if(c.localName==='br')r.push({t:'\n'})}
+  return {l:+((pPr&&pPr.getAttribute('lvl'))||0),n:an?an.getAttribute('type'):'',st:an?+(an.getAttribute('startAt')||1):1,r}})}
+const joinParas=ps=>ps.flatMap((p,i)=>i?[{t:'\n'},...p.r]:p.r);
+const textOf=ps=>ps.map(p=>p.r.map(x=>x.t).join('')).join('\n').trim();
+function xfrm(el){const o=first(el,NS_A,'off'),e=first(el,NS_A,'ext');return o?{x:+o.getAttribute('x'),y:+o.getAttribute('y'),w:e?+e.getAttribute('cx'):0}:{x:0,y:0,w:0}}
+function parseSlideXml(xml){
+ const doc=new DOMParser().parseFromString(xml,'application/xml'),tree=first(doc,NS_P,'spTree'),shapes=[],frames=[];
+ for(const c of tree.children){if(c.namespaceURI!==NS_P)continue;
+  if(c.localName==='sp'){const tb=kids(c,NS_P,'txBody')[0];if(!tb)continue;const ps=parasOf(tb);shapes.push({...xfrm(c),ps,text:textOf(ps)})}
+  else if(c.localName==='graphicFrame'){const tbl=first(c,NS_A,'tbl');if(tbl)frames.push({...xfrm(c),tbl})}}
+ const tables=frames.sort((a,b)=>Math.floor(a.y/400000)-Math.floor(b.y/400000)||a.x-b.x).map(f=>{
+  const rows=kids(f.tbl,NS_A,'tr').map(tr=>kids(tr,NS_A,'tc').filter(tc=>tc.getAttribute('hMerge')!=='1'&&tc.getAttribute('vMerge')!=='1').map(tc=>{
+   const tb=kids(tc,NS_A,'txBody')[0],pr=kids(tc,NS_A,'tcPr')[0];
+   return {r:tb?joinParas(parasOf(tb)):[],cs:+tc.getAttribute('gridSpan')||1,rs:+tc.getAttribute('rowSpan')||1,h:pr&&kids(pr,NS_A,'solidFill').length?1:0}}));
+  // caption: the closest text box just above the table, roughly in line with its left edge
+  const cands=shapes.filter(s=>s.text&&Math.abs(s.x-f.x)<400000&&s.y<f.y&&f.y-s.y<700000).sort((a,b)=>(f.y-a.y)-(f.y-b.y));
+  return {cap:cands[0]?joinParas(cands[0].ps):[],rows}});
+ // footnotes: the text box with the most numbered paragraphs
+ const count=s=>s.ps.filter(p=>p.n).length,box=[...shapes].sort((a,b)=>count(b)-count(a))[0];
+ const notes=box&&count(box)?box.ps.filter(p=>p.r.map(x=>x.t).join('').trim()).map(p=>({l:p.l,n:p.n,st:p.st,r:p.r})):[];
+ return {tables,notes}}
+async function parsePptx(buf){
+ const zip=await JSZip.loadAsync(buf),read=async f=>new DOMParser().parseFromString(await zip.file(f).async('string'),'application/xml');
+ const pres=await read('ppt/presentation.xml'),rels=await read('ppt/_rels/presentation.xml.rels');
+ const id=pres.getElementsByTagNameNS(NS_P,'sldId')[SLIDE_NO-1];if(!id)throw new Error('slide '+SLIDE_NO+' not found');
+ const rid=id.getAttributeNS(NS_R,'id'),rel=[...rels.getElementsByTagName('Relationship')].find(r=>r.getAttribute('Id')===rid);
+ const tg=rel.getAttribute('Target'),path=tg.startsWith('/')?tg.slice(1):'ppt/'+tg;
+ return parseSlideXml(await zip.file(path).async('string'))}
+async function loadSlide(){
+ try{slide=(await idbGet('slide-v3'))||null}catch(e){}
+ if(slide)renderSlide();
+ try{
+  if(!window.JSZip)throw new Error('unzip library missing');
+  const r=await fetch(PPTX_URL,{cache:'no-cache'});if(!r.ok)throw new Error('HTTP '+r.status);
+  slide=await parsePptx(await r.arrayBuffer());slide.at=Date.now();slideErr='';
+  try{await idbSet('slide-v3',slide)}catch(e){}
+ }catch(e){slideErr=String(e.message||e)}
+ renderSlide();
+}
+function fill(node,runs){
+ for(const x of runs||[]){const n=document.createElement(x.s?'sup':'span');n.textContent=x.t;if(x.b)n.style.fontWeight='700';if(x.i)n.style.fontStyle='italic';node.append(n)}
+ if(node.lastChild)node.lastChild.textContent=node.lastChild.textContent.replace(/\n+$/,'');
+ node.dir='auto'}
+function tableEl(t){
+ const tb=el('table');
+ t.rows.forEach(row=>{const tr=el('tr');
+  for(const c of row){const cell=el(c.h?'th':'td');if(c.cs>1)cell.colSpan=c.cs;if(c.rs>1)cell.rowSpan=c.rs;fill(cell,c.r);tr.append(cell)}
+  tb.append(tr)});
+ const box=el('div');
+ if(t.cap&&t.cap.length){const cp=el('p','cap');fill(cp,t.cap);box.append(cp)}
+ const w=el('div','tw');w.append(tb);box.append(w);return box}
+function label(type,v){
+ if(type==='alphaLcPeriod')return String.fromCharCode(96+v)+'.';
+ if(type==='alphaUcPeriod')return String.fromCharCode(64+v)+'.';
+ return v+'.'}
+function renderSlide(){
+ const T=$('tables'),N=$('notes');T.innerHTML='';N.innerHTML='';
+ const say=t=>{for(const P of [T,N])P.append(el('p','msg',t))};
+ if(!slide)return say(slideErr?`Could not load the slide (${slideErr}).`:'Loading slide…');
+ if(!slide.tables.length)T.append(el('p','msg','No tables found on the slide.'));
+ for(const t of slide.tables)T.append(tableEl(t));
+ if(!slide.notes.length)N.append(el('p','msg','No footnotes found on the slide.'));
+ else{const card=el('div','note'),ctr=[];
+  for(const n of slide.notes){
+   let lb='';if(n.n){ctr[n.l]=ctr[n.l]==null?n.st:ctr[n.l]+1;ctr.length=n.l+1;lb=label(n.n,ctr[n.l])}
+   const d=el('div','fn');d.style.paddingLeft=(n.l*1.6)+'em';
+   d.append(el('span','lb',lb));const tx=el('div','tx');fill(tx,n.r);d.append(tx);card.append(d)}
+  N.append(card)}
+ if(slideErr){for(const P of [T,N])P.append(el('p','msg',`Showing saved copy (${slideErr}).`))}
+}
+function view(v){
+ for(const b of $('tabs').querySelectorAll('button'))b.classList.toggle('on',b.dataset.v===v);
+ $('qrow').hidden=v!=='search';$('helpbtn').hidden=v!=='search';$('results').hidden=v!=='search';
+ $('more').hidden=v!=='search'||shown>=matches.length;
+ $('tables').hidden=v!=='tables';$('notes').hidden=v!=='notes';
+ window.scrollTo(0,0)}
+$('tabs').addEventListener('click',e=>{const v=e.target.dataset&&e.target.dataset.v;if(v)view(v)});
+
+
+// ---- Rules tab: popup for the associated rule ----
+const RULES_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&sheet=Rules`;
+let rules=[],rhead=['','',''],ruleExact=new Map(),ruleLoose=new Map();
+const clean=s=>(s||'').replace(/\s+/g,' ').trim().toLowerCase(),noSlash=s=>clean((s||'').replace(/\//g,''));
+function buildRuleIdx(){ruleExact=new Map();ruleLoose=new Map();
+ for(const r of rules){const a=clean(r.b),b=noSlash(r.b);if(!ruleExact.has(a))ruleExact.set(a,r);if(!ruleLoose.has(b))ruleLoose.set(b,r)}}
+// Exact match first; otherwise compare with the slashes removed ("/o/ ↔ NHG /a/" finds "o ↔ NHG a").
+function findRule(txt){const k=clean(txt);if(!k)return null;return ruleExact.get(k)||ruleLoose.get(noSlash(k))||null}
+async function loadRules(){
+ try{const c=await idbGet('rules-v1');if(c&&c.rules){rules=c.rules;rhead=c.head||rhead;buildRuleIdx()}}catch(e){}
+ try{
+  const res=await fetch(RULES_URL);if(!res.ok)throw new Error(res.status);
+  const text=await res.text();if(text.trim().startsWith('<'))throw new Error('Sheet is not public');
+  const t=parseCSV(text);rhead=[1,2,3].map(i=>((t[0]||[])[i]||'').trim());
+  rules=t.slice(1).filter(r=>(r[1]||'').trim()).map(r=>({b:r[1].trim(),c:(r[2]||'').trim(),d:(r[3]||'').trim()}));
+  buildRuleIdx();
+  try{await idbSet('rules-v1',{at:Date.now(),head:rhead,rules})}catch(e){}
+ }catch(e){}
+ if($('q').value.trim())search();
+}
+const PLACE_URL='https://yivo.org/yiddishland-topo';
+// Shows text in a node; for the Place names rule, the word "here" becomes a link.
+function setText(node,text,ruleName){
+ const m=/^place names$/i.test(ruleName||'')?/\bhere\b/i.exec(text):null;
+ if(!m){node.textContent=text;return}
+ node.textContent='';node.append(text.slice(0,m.index));
+ const a=document.createElement('a');a.href=PLACE_URL;a.target='_blank';a.rel='noopener';a.textContent=m[0];
+ node.append(a,text.slice(m.index+m[0].length))}
+function showRule(r){
+ const ov=el('div','ov'),box=el('div','modal'),h=el('h3');h.dir='auto';h.textContent=r.b;
+ const x=el('button','x','×');x.type='button';x.setAttribute('aria-label','Close');
+ const esc=e=>{if(e.key==='Escape')close()},close=()=>{ov.remove();document.removeEventListener('keydown',esc)};
+ x.onclick=close;ov.addEventListener('click',e=>{if(e.target===ov)close()});document.addEventListener('keydown',esc);
+ box.append(x,h);
+ for(const [lab,txt,isOut] of [[rhead[1],r.c,false],[rhead[2],r.d,true]]){if(!txt)continue;
+  const p=el('div','rf');if(lab)p.append(el('div','rl',lab));const t=el('div','rt');t.dir='auto';if(isOut)setText(t,txt,r.b);else t.textContent=txt;p.append(t);box.append(p)}
+ ov.append(box);root.append(ov)}
+
+// ---- Guided questions: which rule applies? (offered when a search has no matches) ----
+// Walks the Rules tab in sheet order: the first rule that describes the word is the one that applies.
+const isLK=r=>/^loshn-koydesh$/i.test(r.b||'');
+const isGmc=r=>/^gmc:/i.test(r.b||'')||/applies only to words from the germanic component/i.test(r.c||'');
+function wizSeq(branch){
+ const secs=[];let cur={head:'',items:[]};secs.push(cur);
+ for(const r of rules){
+  if(!r.c&&!r.d){
+   if(/^from now on/i.test(r.b))cur.items.push({note:r.b});
+   else{cur={head:r.b,items:[]};secs.push(cur)}
+  }else cur.items.push(r)}
+ const intro=secs.find(x=>/^introductory$/i.test(x.head)),lk=secs.find(x=>isLK({b:x.head})),non=secs.find(x=>/^non-loshn-koydesh$/i.test(x.head));
+ if(!intro||!lk||!non)return null;
+ if(branch==='lk')return lk.items;
+ // A rule that says it is only marked when no later rule applies (Slavic) is asked last.
+ const main=[],late=[];
+ for(const it of non.items)(it.c&&/not covered by any of the subsequent rules/i.test(it.c)?late:main).push(it);
+ return [...intro.items.filter(r=>!isLK(r)&&!/^unique cases$/i.test(r.b)),...main,...late]}
+function wizNext(branch,i,notes){
+ const seq=wizSeq(branch);
+ if(!seq)return {t:'msg',text:'The rules have not loaded yet. Open the app online once so they can be saved.'};
+ for(;i<seq.length;i++){const it=seq[i];
+  if(it.note){notes=[...notes,it.note];continue}
+  if(isGmc(it)){if(wz.germanic===null)return {t:'gate',branch,i,notes};if(!wz.germanic)continue}
+  if(branch==='lk'&&i===seq.length-1&&/all others/i.test(it.b))return {t:'result',rule:it,auto:true,notes};
+  return {t:'rule',branch,i,notes,rule:it}}
+ return {t:'none',notes}}
+let wz=null;
+function startWizard(word){$('more').hidden=true;wz={word,hist:[],germanic:null,cur:{t:'q0'}};renderWizard()}
+function wizGo(next){wz.hist.push(wz.cur);wz.cur=next;renderWizard()}
+// Question wording for each rule. Matched by rule name (or description); the first four rules of the
+// non-loshn-koydesh path fall back to place name / unstressed / derived / English borrowing by position.
+function wizQuestion(s){
+ const r=s.rule,b=r.b||'',c=r.c||'';
+ if(/place name/i.test(b))return 'Is the word a place name?';
+ if(/unstress/i.test(b))return 'Is the vowel unstressed?';
+ if(/^derived$/i.test(b))return 'Is the word derived?';
+ if(/english/i.test(b))return 'Is the word a borrowing from English?';
+ if(/slavic/i.test(b)||/not covered by any of the subsequent rules/i.test(c))return 'Is the word of Slavic origin?';
+ if(s.branch==='non'){
+  const n=wz.hist.filter(h=>h.t==='rule'&&h.branch==='non').length;
+  if(n<4)return ['Is the word a place name?','Is the vowel unstressed?','Is the word derived?','Is the word a borrowing from English?'][n]}
+ return 'Does this rule apply?'}
+function renderWizard(){
+ const R=$('results'),s=wz.cur,notes=s.notes||[];R.innerHTML='';
+ const box=el('div','wiz');if(wz.word){const w=el('p','wmut','Searching for: '+wz.word);w.dir='auto';box.append(w)}
+ for(const n of notes)box.append(el('p','wn',n));
+ const yn=(onYes,onNo)=>{const row=el('div','wrow');
+  for(const [l,f] of [['Yes',onYes],['No',onNo]]){const b=el('button','wbtn',l);b.type='button';b.onclick=f;row.append(b)}
+  box.append(row)};
+ if(s.t==='q0'){
+  box.append(el('p','wq','Is this a loshn-koydesh word?'));
+  yn(()=>wizGo(wizNext('lk',0,[])),()=>wizGo(wizNext('non',0,[])))}
+ else if(s.t==='gate'){
+  box.append(el('p','wq','Is the word of Germanic origin?'));
+  yn(()=>{wz.germanic=true;wizGo(wizNext(s.branch,s.i,notes))},()=>{wz.germanic=false;wizGo(wizNext(s.branch,s.i,notes))})}
+ else if(s.t==='rule'){const r=s.rule;
+  box.append(el('p','wh',r.b));const d=el('p','wd',r.c);d.dir='auto';box.append(d);
+  box.append(el('p','wq',wizQuestion(s)));
+  yn(()=>wizGo({t:'result',rule:r,notes}),()=>wizGo(wizNext(s.branch,s.i+1,notes)))}
+ else if(s.t==='result'){const r=s.rule;
+  box.append(el('p','wlab',s.auto?'No other rule applied, so the rule is:':'The rule that applies is:'));
+  box.append(el('p','wh',r.b));
+  box.append(el('p','wlab',r.d?(rhead[2]||'Outcome'):(rhead[1]||'Description')));
+  const o=el('p','wo');setText(o,r.d||r.c,r.b);o.dir='auto';box.append(o);
+  if(/^derived$/i.test(r.b))box.append(el('p','wn','Next, find the vowel length of the root word: start over with the root.'));
+  const row=el('div','wrow'),fb=el('button','wbtn','Show the full rule');fb.type='button';fb.onclick=()=>showRule(r);row.append(fb);box.append(row)}
+ else if(s.t==='none')box.append(el('p','wq','None of the rules matched this word.'));
+ else box.append(el('p','wq',s.text));
+ const nav=el('div','wnav');
+ if(wz.hist.length){
+  const bk=el('button',null,'Back');bk.type='button';bk.onclick=()=>{wz.cur=wz.hist.pop();renderWizard()};nav.append(bk);
+  const so=el('button',null,'Start over');so.type='button';so.onclick=()=>startWizard(wz.word);nav.append(so)}
+ const bs=el('button',null,'Back to search');bs.type='button';bs.onclick=search;nav.append(bs);
+ box.append(nav);R.append(box);window.scrollTo(0,0)}
+
+YT.attach($('q'),$('yid-toggle'));
+
+// ---- Export / import of the saved data ----
+async function exportData(){
+ if(!rows.length&&!slide){alert('There is no saved data to export yet.');return}
+ const data={app:'lokshn-search',version:1,exported:new Date().toISOString(),sheet:rows.length?{at:sheetAt,rows}:null,slide,rules:rules.length?{head:rhead,rules}:null};
+ const name=`lokshn-search-${data.exported.slice(0,10)}.json`,file=new File([JSON.stringify(data)],name,{type:'application/json'});
+ try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file]});return}}
+ catch(e){if(e.name==='AbortError')return}
+ const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;document.body.append(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(a.href),10000)}
+async function importData(file){
+ try{
+  const j=JSON.parse(await file.text());
+  const okSheet=!!(j.sheet&&Array.isArray(j.sheet.rows)&&j.sheet.rows.every(r=>r&&typeof r.word==='string'));
+  const okSlide=!!(j.slide&&Array.isArray(j.slide.tables)&&Array.isArray(j.slide.notes));
+  const okRules=!!(j.rules&&Array.isArray(j.rules.rules));
+  if(!okSheet&&!okSlide&&!okRules)throw new Error('this is not a LOKSHN Search export');
+  const what=[okSheet?`${j.sheet.rows.length} entries`:'',okSlide?'the slide tables and footnotes':'',okRules?`${j.rules.rules.length} rules`:''].filter(Boolean).join(' and ');
+  if(!confirm(`Replace the saved data with ${what} from this file?`))return;
+  if(okSheet){rows=j.sheet.rows.map(r=>({...r,nw:norm(r.word),ng:norm(r.gloss||'')}));sheetAt=j.sheet.at||Date.now();
+   await idbSet(CACHE_KEY,{at:sheetAt,rows});setStatus(`${rows.length} entries (imported)`);search()}
+  if(okSlide){slide=j.slide;slideErr='';await idbSet('slide-v3',slide);renderSlide()}
+  if(okRules){rules=j.rules.rules;rhead=j.rules.head||rhead;buildRuleIdx();await idbSet('rules-v1',{at:Date.now(),head:rhead,rules});search()}
+ }catch(err){alert('Could not import: '+(err.message||err))}}
+$('exp').addEventListener('click',exportData);
+$('imp').addEventListener('click',()=>$('impfile').click());
+$('impfile').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)importData(f)});
+
+$('q').addEventListener('input',search);
+$('helpbtn').addEventListener('click',()=>{view('search');startWizard($('q').value.trim())});
+$('more').addEventListener('click',more);
+$('refresh').addEventListener('click',()=>load(true));
+load(false);loadSlide();loadRules();
+
+})();
+
+(function(){
+    const SHEET_ID = '1grJ0TvZI_2iYKaEJSq0gU-Qs_hvHi7Rg8uP_sz8Rk0M';
+    const url = n => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&sheet=${n}`;
+    const CACHE_KEY = 'oy-lookup-v1', PAGE = 50, FETCH_TIMEOUT = 8000,
+        DIALS = [['Klal', 'Klal (Standard)'], ['NEY', 'NEY (Northeastern)'], ['CY', 'CY (Central)'], ['SEY', 'SEY (Southeastern)']];
+    const root = document.getElementById('app-o'), $ = id => document.getElementById('o-' + id);
+
+    function el(tag, cls, txt) {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (txt != null) e.textContent = txt;
+        return e
+    }
+
+    const {get:idbGet,set:idbSet}=kv('oy-lookup');
+
+// ---- parsing
+        const norm = s => (s || '').normalize('NFD').replace(/[\u0591-\u05C7]/g, '').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').replace(/[\s\-()…]/g, '').toLowerCase();
+
+    function table(csv) {
+        const t = parseCSV(csv), head = t[0].map(h => h.trim().toLowerCase());
+        return {
+            head: t[0].map(h => h.trim()),
+            rows: t.slice(1).filter(r => r.some(c => c.trim())),
+            col: n => head.indexOf(n)
+        }
+    }
+
+    function buildWords(csv) {
+        const T = table(csv), g = n => T.col(n);
+        const keys = ['word', 'gloss', 'component', 'group', 'klal', 'ney', 'cy', 'sey', 'hint', 'notes'], ix = {};
+        keys.forEach(k => ix[k] = g(k));
+        return T.rows.filter(r => (r[ix.word] || '').trim()).map(r => {
+            const o = {};
+            keys.forEach(k => o[k] = ix[k] >= 0 ? (r[ix[k]] || '').trim() : '');
+            o.nw = norm(o.word);
+            o.ng = norm(o.gloss);
+            return o
+        })
+    }
+
+    function buildRules(csv) {
+        const T = table(csv), c = n => T.col(n);
+        return T.rows.map(r => ({
+            code: (r[c('code')] || '').trim(),
+            name: (r[c('rule')] || '').trim(),
+            when: (r[c('applies when')] || '').trim(),
+            pron: (r[c('pronunciation')] || '').trim()
+        })).filter(r => r.name)
+    }
+
+    function buildPairs(csv) {
+        const T = table(csv);
+        return {head: T.head, rows: T.rows}
+    }
+
+    let words = [], rules = [], pairs = {head: [], rows: []}, matches = [], shown = 0;
+    const gl = c => (c || '').replace(/^G(?=\d)/i, '');
+    const gk = c => (c || '').trim().replace(/^G(?=\d)/i, '').toLowerCase();
+    const ruleFor = code => gk(code) ? rules.find(r => gk(r.code) === gk(code)) : null;
+
+    function parseDial(t) {
+        const re = /\b(Klal|NEY|CY|SEY|SY)\s*:/g;
+        let m;
+        const pos = [];
+        while ((m = re.exec(t))) pos.push([m[1], m.index, re.lastIndex]);
+        if (!pos.length) return null;
+        const o = {};
+        pos.forEach((p, i) => {
+            const v = t.slice(p[2], i + 1 < pos.length ? pos[i + 1][1] : t.length).trim().replace(/[.;]\s*$/, '');
+            if (p[0] === 'SY') {
+                o.CY = o.CY || v;
+                o.SEY = o.SEY || v
+            } else o[p[0]] = v
+        });
+        return o
+    }
+
+    // ---- loading
+    function setStatus(m) {
+        $('count').textContent = m
+    }
+
+    async function load(force) {
+        if (!force) {
+            try {
+                const c = await idbGet(CACHE_KEY);
+                if (c && c.words) {
+                    ({words, rules, pairs} = c);
+                    setStatus(`${words.length} words (saved ${new Date(c.at).toLocaleDateString()})`);
+                    render()
+                }
+            } catch (e) {
+            }
+        }
+        try {
+            if (navigator.onLine === false) throw Object.assign(new Error('offline'), {name: 'Offline'});
+            setStatus(words.length ? 'Updating…' : 'Loading data…');
+            // Give up after FETCH_TIMEOUT ms so a bad connection never leaves the app waiting; saved data stays in use.
+            const get = async n => {
+                const ac = new AbortController(), tm = setTimeout(() => ac.abort(), FETCH_TIMEOUT);
+                try {
+                    const r = await fetch(url(n), {signal: ac.signal});
+                    if (!r.ok) throw new Error(r.status);
+                    const t = await r.text();
+                    if (t.trim().startsWith('<')) throw new Error('Sheet is not public');
+                    return t
+                } finally {
+                    clearTimeout(tm)
+                }
+            };
+            const [a, b, c] = await Promise.all([get('Oy'), get('Rules'), get('MinimalPairs')]);
+            words = buildWords(a);
+            rules = buildRules(b);
+            pairs = buildPairs(c);
+            try {
+                await idbSet(CACHE_KEY, {at: Date.now(), words, rules, pairs})
+            } catch (e) {
+            }
+            setStatus(`${words.length} words · up to date`);
+            render();
+        } catch (e) {
+            const slow = e.name === 'AbortError', off = e.name === 'Offline' || slow || e instanceof TypeError;
+            if (words.length) setStatus(`${slow ? 'Slow connection' : 'Offline'} — using saved data (${words.length} words)`);
+            else if (off) setStatus(`${slow ? 'Connection too slow' : 'No connection'} and no saved data yet. Tap Refresh data to try again.`);
+            else setStatus('Could not load the spreadsheet. Check that it is shared as “Anyone with the link can view”.')
+        }
+    }
+
+    addEventListener('online', () => load(true));
+
+    function render() {
+        search();
+        drawGroups();
+        drawPairs()
+    }
+
+    // ---- search
+    function search() {
+        const raw = $('q').value.trim(), q = norm(raw), R = $('results');
+        if (!q) {
+            matches = [];
+            R.innerHTML = words.length ? '<p class="msg">Type a Yiddish word to search. Partial matches are included. English glosses work too.</p>' : '';
+            $('more').hidden = true;
+            return
+        }
+        const latin = /[a-z]/i.test(raw), m = [];
+        for (const w of words) {
+            let best = -1, len = 0;
+            const tryKey = s => {
+                if (!s) return;
+                const p = s.indexOf(q);
+                if (p < 0) return;
+                const sc = s === q ? 0 : p === 0 ? 1 : 2;
+                if (best < 0 || sc < best) {
+                    best = sc;
+                    len = s.length
+                }
+            };
+            if (latin) tryKey(w.ng); else tryKey(w.nw);
+            if (best >= 0) m.push([best, len, w])
+        }
+        m.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+        matches = m.map(x => x[2]);
+        shown = 0;
+        R.innerHTML = '';
+        if (!matches.length) {
+            noMatch(raw, q);
+            $('more').hidden = true;
+            return
+        }
+        more()
+    }
+
+    function more() {
+        const f = document.createDocumentFragment();
+        for (const w of matches.slice(shown, shown + PAGE)) f.append(card(w));
+        shown = Math.min(shown + PAGE, matches.length);
+        $('results').append(f);
+        $('more').hidden = shown >= matches.length;
+        $('more').textContent = `Show more (${matches.length - shown} left)`
+    }
+
+    function noMatch(raw, q) {
+        const R = $('results');
+        R.append(el('p', 'msg', 'No matches.'));
+        if (/[a-z]/i.test(raw) || !q.includes('וי') || !ruleFor('2')) return;
+        const r = ruleFor('2'), c = el('article', 'card');
+        c.append(el('div', 'gt', 'Not in the lists'));
+        c.append(el('p', null, 'Group 1 is close to exhaustive and Groups 4 and 5 are small, so a word with וי that is in none of them most likely follows Group 2.'));
+        const b = el('button', 'rulelink', r.name);
+        b.type = 'button';
+        b.onclick = () => showRule(r);
+        c.append(b);
+        const d = parseDial(r.pron);
+        if (d) c.append(dialBlock(d, {}));
+        c.append(el('p', 'sub', 'This is the guide’s general pattern, not a lookup result. Check the word in a dictionary if it matters.'));
+        R.append(c)
+    }
+
+    function dialBlock(der, own) {
+        const dl = el('dl');
+        let any = false;
+        for (const [k, label] of DIALS) {
+            const k2 = k.toLowerCase(), mine = own[k2] || '', d = der && der[k] || '', v = mine || d;
+            dl.append(el('dt', null, label));
+            const dd = el('dd', mine ? null : v ? 'der' : 'empty', v || '—');
+            dd.dir = 'auto';
+            dl.append(dd);
+            if (v) any = true
+        }
+        return any ? dl : null
+    }
+
+    function card(w) {
+        const c = el('article', 'card'), h = el('h2', 'word', w.word);
+        h.lang = 'yi';
+        c.append(h);
+        const dl = el('dl'), row = (l, v, node) => {
+            dl.append(el('dt', null, l));
+            const d = el('dd');
+            if (node) d.append(node); else if (v) {
+                d.textContent = v
+            } else {
+                d.className = 'empty';
+                d.textContent = '—'
+            }
+            dl.append(d)
+        };
+        row('Gloss', w.gloss);
+        row('Component', w.component);
+        const r = ruleFor(w.group);
+        if (r) {
+            const b = el('button', 'rulelink', `Group ${gl(w.group)}`);
+            b.type = 'button';
+            b.onclick = () => showRule(r);
+            row('Group', null, b)
+        } else row('Group', gl(w.group));
+        if (w.hint) {
+            const s = el('span', 'he', w.hint);
+            s.lang = 'yi';
+            row('Hint', null, s)
+        }
+        c.append(dl);
+        const der = r ? parseDial(r.pron) : null, own = {klal: w.klal, ney: w.ney, cy: w.cy, sey: w.sey},
+            hasOwn = Object.values(own).some(Boolean), db = dialBlock(der, own);
+        if (db) {
+            c.append(el('div', 'sec', 'Pronunciation by dialect'));
+            c.append(db);
+            if (der && !hasOwn) c.append(el('p', 'sub', 'Values come from the group’s rule.'))
+        } else if (r && r.pron) {
+            c.append(el('div', 'sec', 'Pronunciation'));
+            c.append(el('div', 'pre', r.pron))
+        }
+        if (w.notes) {
+            c.append(el('div', 'sec', 'Notes'));
+            c.append(el('div', 'pre', w.notes))
+        }
+        return c
+    }
+
+    // ---- rule modal
+    function showRule(r) {
+        const ov = el('div', 'ov'), m = el('div', 'modal'), x = el('button', 'x', '×');
+        x.type = 'button';
+        x.setAttribute('aria-label', 'Close');
+        const close = () => ov.remove();
+        x.onclick = close;
+        ov.onclick = e => {
+            if (e.target === ov) close()
+        };
+        m.append(x, el('h3', null, r.name));
+        if (r.when) {
+            m.append(el('div', 'rl', 'Applies when'), el('div', 'pre', r.when))
+        }
+        if (r.pron) {
+            m.append(el('div', 'rl', 'Pronunciation'));
+            const d = parseDial(r.pron), b = d && dialBlock(d, {});
+            if (b) m.append(b); else m.append(el('div', 'pre', r.pron))
+        }
+        if (r.code && words.some(w => gk(w.group) === gk(r.code))) {
+            const b = el('button', 'gb', 'See the words in this group');
+            b.type = 'button';
+            b.onclick = () => {
+                close();
+                setView('groups');
+                const t = root.querySelector(`[data-code="${gk(r.code)}"] .gb`);
+                if (t) {
+                    t.click();
+                    t.scrollIntoView({block: 'start'})
+                }
+            };
+            m.append(b)
+        }
+        ov.append(m);
+        root.append(ov)
+    }
+
+    // ---- tabs: groups, pairs
+    function drawGroups() {
+        const G = $('groups');
+        G.innerHTML = '';
+        if (!rules.length) {
+            G.append(el('p', 'msg', 'No data yet.'));
+            return
+        }
+        for (const r of rules) {
+            const n = el('div', 'note');
+            if (r.code) n.dataset.code = gk(r.code);
+            n.append(el('div', 'gt', r.name));
+            if (r.when) n.append(el('div', 'pre', r.when));
+            if (r.pron) {
+                n.append(el('div', 'rl', 'Pronunciation'));
+                const d = parseDial(r.pron), b = d && dialBlock(d, {});
+                if (b) n.append(b); else n.append(el('div', 'pre', r.pron))
+            }
+            const ws = r.code ? words.filter(w => gk(w.group) === gk(r.code)) : [];
+            if (ws.length) {
+                const b = el('button', 'gb', `Show words (${ws.length})`);
+                b.type = 'button';
+                const chips = el('div', 'chips');
+                chips.hidden = true;
+                b.onclick = () => {
+                    if (!chips.childElementCount) for (const w of ws) {
+                        const c = el('button', 'chip', w.word);
+                        c.type = 'button';
+                        c.lang = 'yi';
+                        c.onclick = () => {
+                            $('q').value = w.word;
+                            setView('search');
+                            search();
+                            scrollTo(0, 0)
+                        };
+                        chips.append(c)
+                    }
+                    chips.hidden = !chips.hidden;
+                    b.textContent = (chips.hidden ? 'Show' : 'Hide') + ` words (${ws.length})`
+                };
+                n.append(b, chips)
+            }
+            G.append(n)
+        }
+    }
+
+    function drawPairs() {
+        const P = $('pairs');
+        P.innerHTML = '';
+        if (!pairs.rows.length) {
+            P.append(el('p', 'msg', 'No data yet.'));
+            return
+        }
+        P.append(el('p', 'sub', 'Minimal and near-minimal pairs: Group 1 (U4) vs. Group 2 (cholam).'));
+        const w = el('div', 'tw'), t = el('table'), hr = el('tr');
+        for (const h of pairs.head) hr.append(el('th', null, h));
+        t.append(hr);
+        for (const r of pairs.rows) {
+            const tr = el('tr');
+            pairs.head.forEach((_, i) => {
+                const td = el('td', null, r[i] || '');
+                if (/[\u0590-\u05FF]/.test(r[i] || '')) {
+                    td.className = 'he';
+                    td.lang = 'yi'
+                }
+                tr.append(td)
+            });
+            t.append(tr)
+        }
+        w.append(t);
+        P.append(w)
+    }
+
+    function setView(v) {
+        $('tabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+        $('results').hidden = v !== 'search';
+        $('more').hidden = v !== 'search' || shown >= matches.length;
+        $('groups').hidden = v !== 'groups';
+        $('pairs').hidden = v !== 'pairs'
+    }
+
+    $('tabs').querySelectorAll('button').forEach(b => b.onclick = () => setView(b.dataset.v));
+    $('q').addEventListener('input', () => {
+        setView('search');
+        search()
+    });
+    $('more').onclick = more;
+    $('refresh').onclick = () => load(true);
+    YT.attach($('q'), $('yid-toggle'));
+
+
+    // ---- export / import
+    $('exp').onclick = () => {
+        if (!words.length) {
+            setStatus('Nothing to export yet.');
+            return
+        }
+        const data = {app: 'oy-search', version: 1, exported: new Date().toISOString(), words, rules, pairs};
+        const blob = new Blob([JSON.stringify(data)], {type: 'application/json'}), a = el('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `oy-search-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.append(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        setStatus(`Exported ${words.length} words.`)
+    };
+    $('imp').onclick = () => $('impfile').click();
+    $('impfile').onchange = async e => {
+        const f = e.target.files[0];
+        e.target.value = '';
+        if (!f) return;
+        try {
+            const j = JSON.parse(await f.text());
+            if (j.app !== 'oy-search' || !Array.isArray(j.words) || !j.words.every(w => w && typeof w.word === 'string') || !Array.isArray(j.rules) || !j.pairs || !Array.isArray(j.pairs.rows)) throw new Error('not an Oy Search export');
+            words = j.words.map(w => ({...w, nw: norm(w.word), ng: norm(w.gloss || '')}));
+            rules = j.rules;
+            pairs = {head: j.pairs.head || [], rows: j.pairs.rows};
+            try {
+                await idbSet(CACHE_KEY, {at: Date.now(), words, rules, pairs})
+            } catch (_) {
+            }
+            setStatus(`${words.length} words (imported)`);
+            render();
+        } catch (err) {
+            setStatus('Import failed: ' + err.message)
+        }
+    };
+
+    load(false);
+    
+})();
+</script>
+</body>
+</html>
