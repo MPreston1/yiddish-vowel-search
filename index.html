@@ -79,6 +79,7 @@ th{background:var(--nabg)}
 .tools{display:flex;gap:20px;justify-content:center;padding:8px 0 0}
 .tools button{background:none;border:0;color:var(--acc);font-size:13px;padding:4px}
 .credit{color:var(--mut);font-size:12px;text-align:center;padding:8px 0 28px}
+.credit a{color:var(--acc)}
 .he{direction:rtl;unicode-bidi:isolate}
 
 /* ---- Vowel length (LOKSHN) only ---- */
@@ -134,12 +135,13 @@ button.wbtn{flex:1;padding:12px;font:inherit;font-size:17px;font-weight:600;bord
 <div class="status"><span id="l-count"></span><button id="l-refresh" class="refresh" type="button">Refresh data</button></div>
 <nav class="tabs" id="l-tabs"><button type="button" data-v="search" class="on">Search</button><button type="button" data-v="tables">Tables</button><button type="button" data-v="notes">Footnotes</button></nav>
 </header>
+<div class="note" id="l-intro" hidden></div>
 <div id="l-results"></div>
 <button id="l-more" class="more" type="button" hidden>Show more</button>
 <div id="l-tables" hidden></div>
 <div id="l-notes" hidden></div>
 <footer class="tools"><button type="button" id="l-exp">Export data</button><button type="button" id="l-imp">Import data</button><input type="file" id="l-impfile" accept=".json,application/json" hidden></footer>
-<p class="credit">Based on the “L.O.K.SH.N Guide to Vowel Length” and the “Companion Database for the L.O.K.SH.N Guide to Vowel Length,” both compiled by Arun (Arele) Schaechter Viswanath.</p>
+<p class="credit">Based on the <a href="https://docs.google.com/presentation/d/1OzduSlGXEnK3ZCFV1P83UKeNwms5MjKgagxxe6kpKZY/edit?slide=id.h105c52efcca4e630_2_0#slide=id.h105c52efcca4e630_2_0" target="_blank" rel="noopener">“L.O.K.SH.N Guide to Vowel Length”</a> and the <a href="https://docs.google.com/spreadsheets/d/1Vip_J4QjpMBorfov15jmbXouSXQMAmMXT0EbYsYfPkc/edit?gid=671156978#gid=671156978" target="_blank" rel="noopener">“Companion Database for the L.O.K.SH.N Guide to Vowel Length,”</a> both compiled by Arun (Arele) Schaechter Viswanath.</p>
 </section>
 <section class="app app-o" id="app-o">
 <h1>Oy Search: the <span class="he" lang="yi">וי</span> vowel by dialect</h1>
@@ -154,7 +156,7 @@ button.wbtn{flex:1;padding:12px;font:inherit;font-size:17px;font-weight:600;bord
 <div id="o-groups" hidden></div>
 <div id="o-pairs" hidden></div>
 <footer class="tools"><button type="button" id="o-exp">Export data</button><button type="button" id="o-imp">Import data</button><input type="file" id="o-impfile" accept=".json,application/json" hidden></footer>
-<p class="credit">Based on “Oy!: a self-directed guide to the <span class="he">וי</span> vowel for dialect-aspirers,” compiled by Arele Schaechter Viswanath.</p>
+<p class="credit">Based on <a href="https://www.facebook.com/arun.avrum.viswanath/posts/pfbid0uQkRvTzjkXD2cPCEdBobP9nGxVMJNLaASXHVRKxkZYy59v4NMNE6BRaDEBWxb92El" target="_blank" rel="noopener">“Oy!: a self-directed guide to the <span class="he">וי</span> vowel for dialect-aspirers,”</a> compiled by Arele Schaechter Viswanath.</p>
 </section>
 <script src="jszip.min.js"></script>
 <script>
@@ -228,7 +230,7 @@ const SHEET_ID='1Vip_J4QjpMBorfov15jmbXouSXQMAmMXT0EbYsYfPkc',GID='671156978';
 const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&gid=${GID}`;
 const CACHE_KEY='vowel-lookup-v1',PAGE=50;
 // Slide 2 tables and footnotes are read from this PowerPoint file (same folder as index.html).
-const PPTX_URL='guide.pptx',SLIDE_NO=2;
+const PPTX_URL='guide.pptx',SLIDE_NO=2,INTRO_NO=1;
 // Columns are found by header name; letter positions (A,B,C,D,P,Q,R) are the fallback.
 const COLS={word:[['word'],0],gloss:[['gloss'],1],comp:[['component'],2],pos:[['part of speech'],3],rule:[['associated rule'],15],follows:[['follows rule?','follows rule'],16],notes:[['notes'],17]};
 const {get:idbGet,set:idbSet}=kv('vowel-lookup');
@@ -265,6 +267,7 @@ async function load(force){
  }}
 
 function search(){
+ updateIntro();
  const raw=$('q').value.trim(),q=norm(raw);
  if(!q){matches=[];$('results').innerHTML=rows.length?'<p class="msg">Type a Yiddish word to search. Partial matches are included.</p>':'';$('more').hidden=true;return}
  const latin=/[a-z]/i.test(raw),key=latin?'ng':'nw',m=[];
@@ -303,7 +306,11 @@ function card(r){
 
 // ---- Slide 2: tables and footnotes, read from the .pptx ----
 const NS_A='http://schemas.openxmlformats.org/drawingml/2006/main',NS_P='http://schemas.openxmlformats.org/presentationml/2006/main',NS_R='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
-let slide=null,slideErr='';
+let slide=null,slideErr='',curView='search';
+function updateIntro(){const I=$('intro');I.hidden=curView!=='search'||!!$('q').value.trim()||!I.childElementCount}
+function renderIntro(){const I=$('intro');I.innerHTML='';
+ if(slide&&slide.intro&&slide.intro.length){I.append(el('div','cap','What is vowel length?'));const t=el('div','tx');fill(t,slide.intro);I.append(t)}
+ updateIntro()}
 const kids=(n,ns,name)=>[...n.children].filter(c=>c.localName===name&&c.namespaceURI===ns);
 const first=(n,ns,name)=>n.getElementsByTagNameNS(ns,name)[0];
 function parasOf(body){
@@ -336,10 +343,21 @@ function parseSlideXml(xml){
 async function parsePptx(buf){
  const zip=await JSZip.loadAsync(buf),read=async f=>new DOMParser().parseFromString(await zip.file(f).async('string'),'application/xml');
  const pres=await read('ppt/presentation.xml'),rels=await read('ppt/_rels/presentation.xml.rels');
- const id=pres.getElementsByTagNameNS(NS_P,'sldId')[SLIDE_NO-1];if(!id)throw new Error('slide '+SLIDE_NO+' not found');
- const rid=id.getAttributeNS(NS_R,'id'),rel=[...rels.getElementsByTagName('Relationship')].find(r=>r.getAttribute('Id')===rid);
- const tg=rel.getAttribute('Target'),path=tg.startsWith('/')?tg.slice(1):'ppt/'+tg;
- return parseSlideXml(await zip.file(path).async('string'))}
+ const slideXml=async n=>{
+  const id=pres.getElementsByTagNameNS(NS_P,'sldId')[n-1];if(!id)throw new Error('slide '+n+' not found');
+  const rid=id.getAttributeNS(NS_R,'id'),rel=[...rels.getElementsByTagName('Relationship')].find(r=>r.getAttribute('Id')===rid);
+  const tg=rel.getAttribute('Target'),path=tg.startsWith('/')?tg.slice(1):'ppt/'+tg;
+  return zip.file(path).async('string')};
+ const out=parseSlideXml(await slideXml(SLIDE_NO));
+ try{out.intro=parseIntro(await slideXml(INTRO_NO))}catch(e){out.intro=null}
+ return out}
+// Intro: the first paragraph of the text box sitting just under the "WHAT IS VOWEL LENGTH?" heading on the first slide
+function parseIntro(xml){
+ const doc=new DOMParser().parseFromString(xml,'application/xml'),tree=first(doc,NS_P,'spTree'),shapes=[];
+ for(const c of tree.children){if(c.namespaceURI!==NS_P||c.localName!=='sp')continue;const tb=kids(c,NS_P,'txBody')[0];if(!tb)continue;const ps=parasOf(tb);shapes.push({...xfrm(c),ps,text:textOf(ps)})}
+ const h=shapes.find(x=>/^what is vowel length\??$/i.test(x.text.replace(/\s+/g,' ').trim()));if(!h)return null;
+ const below=shapes.filter(x=>x!==h&&x.text&&x.y>h.y).sort((a,b)=>a.y-b.y)[0];if(!below)return null;
+ const p=below.ps.find(q=>q.r.some(x=>x.t.trim()));return p?p.r:null}
 async function loadSlide(){
  try{slide=(await idbGet('slide-v3'))||null}catch(e){}
  if(slide)renderSlide();
@@ -368,6 +386,7 @@ function label(type,v){
  if(type==='alphaUcPeriod')return String.fromCharCode(64+v)+'.';
  return v+'.'}
 function renderSlide(){
+ renderIntro();
  const T=$('tables'),N=$('notes');T.innerHTML='';N.innerHTML='';
  const say=t=>{for(const P of [T,N])P.append(el('p','msg',t))};
  if(!slide)return say(slideErr?`Could not load the slide (${slideErr}).`:'Loading slide…');
@@ -387,6 +406,7 @@ function view(v){
  $('qrow').hidden=v!=='search';$('helpbtn').hidden=v!=='search';$('results').hidden=v!=='search';
  $('more').hidden=v!=='search'||shown>=matches.length;
  $('tables').hidden=v!=='tables';$('notes').hidden=v!=='notes';
+ curView=v;updateIntro();
  window.scrollTo(0,0)}
 $('tabs').addEventListener('click',e=>{const v=e.target.dataset&&e.target.dataset.v;if(v)view(v)});
 
