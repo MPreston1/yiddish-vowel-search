@@ -523,6 +523,14 @@ th {
     overflow-wrap: anywhere
 }
 
+.lead {
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0 0 12px;
+    white-space: pre-line;
+    overflow-wrap: anywhere
+}
+
 .rf {
     margin: 0 0 12px
 }
