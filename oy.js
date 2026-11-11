@@ -28,7 +28,7 @@
 
     function buildWords(csv) {
         const T = table(csv), g = n => T.col(n);
-        const keys = ['word', 'gloss', 'component', 'group', 'klal', 'ney', 'cy', 'sey', 'hint', 'notes'], ix = {};
+        const keys = ['word', 'gloss', 'component', 'group', 'klal', 'ney', 'cy', 'sey', 'notes'], ix = {};
         keys.forEach(k => ix[k] = g(k));
         return T.rows.filter(r => (r[ix.word] || '').trim()).map(r => {
             const o = {};
@@ -236,11 +236,6 @@
             b.onclick = () => showRule(r);
             row('Group', null, b)
         } else row('Group', gl(w.group));
-        if (w.hint) {
-            const s = el('span', 'he', w.hint);
-            s.lang = 'yi';
-            row('Hint', null, s)
-        }
         c.append(dl);
         const der = r ? parseDial(r.pron) : null, own = {klal: w.klal, ney: w.ney, cy: w.cy, sey: w.sey},
             hasOwn = Object.values(own).some(Boolean), db = dialBlock(der, own);
