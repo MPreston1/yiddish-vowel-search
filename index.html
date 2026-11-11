@@ -91,7 +91,7 @@ th{background:var(--nabg)}
 .fn{display:flex;gap:8px;margin:0 0 10px}.fn:last-child{margin:0}
 .lb{flex:none;min-width:1.6em;text-align:end;color:var(--mut)}
 .tx{flex:1;min-width:0;white-space:pre-line;overflow-wrap:anywhere}
-#l-intro .tx{font-size:14px;line-height:1.5}
+.intro{font-size:14px;line-height:1.5;white-space:pre-line;overflow-wrap:anywhere}
 .rf{margin:0 0 12px}.rt{white-space:pre-line;overflow-wrap:anywhere}
 button.wbtn{flex:1;padding:12px;font:inherit;font-size:17px;font-weight:600;border-radius:10px;border:1px solid var(--acc);background:var(--card);color:var(--acc);cursor:pointer}
 .wiz{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:0 0 12px}
@@ -128,7 +128,7 @@ button.wbtn{flex:1;padding:12px;font:inherit;font-size:17px;font-weight:600;bord
 <button type="button" id="mode-o" data-m="o" role="tab">Oy vowel <span class="he" lang="yi">וי</span></button>
 </div></div>
 <section class="app app-l" id="app-l">
-<h1>Searchable Companion Database for the L.O.K.SH.N Guide to Vowel Length</h1>
+<h1>Searchable Companion Database for the L.O.K.SH.N Guide to <button type="button" class="rulelink" id="l-vlbtn" title="What is vowel length?">Vowel Length</button></h1>
 <header>
 <div class="qrow" id="l-qrow"><input id="l-q" type="search" dir="auto" lang="yi" placeholder="Search a Yiddish word…" autocomplete="off" autocapitalize="off" spellcheck="false">
 <button type="button" id="l-yid-toggle" class="yid-toggle" title="Toggle Yiddish typing (or type ~)" aria-pressed="false" aria-label="Toggle Yiddish typing">A</button></div>
@@ -136,7 +136,6 @@ button.wbtn{flex:1;padding:12px;font:inherit;font-size:17px;font-weight:600;bord
 <div class="status"><span id="l-count"></span><button id="l-refresh" class="refresh" type="button">Refresh data</button></div>
 <nav class="tabs" id="l-tabs"><button type="button" data-v="search" class="on">Search</button><button type="button" data-v="tables">Tables</button><button type="button" data-v="notes">Footnotes</button></nav>
 </header>
-<div class="note" id="l-intro" hidden></div>
 <div id="l-results"></div>
 <button id="l-more" class="more" type="button" hidden>Show more</button>
 <div id="l-tables" hidden></div>
@@ -268,7 +267,6 @@ async function load(force){
  }}
 
 function search(){
- updateIntro();
  const raw=$('q').value.trim(),q=norm(raw);
  if(!q){matches=[];$('results').innerHTML=rows.length?'<p class="msg">Type a Yiddish word to search. Partial matches are included.</p>':'';$('more').hidden=true;return}
  const latin=/[a-z]/i.test(raw),key=latin?'ng':'nw',m=[];
@@ -307,11 +305,17 @@ function card(r){
 
 // ---- Slide 2: tables and footnotes, read from the .pptx ----
 const NS_A='http://schemas.openxmlformats.org/drawingml/2006/main',NS_P='http://schemas.openxmlformats.org/presentationml/2006/main',NS_R='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
-let slide=null,slideErr='',curView='search';
-function updateIntro(){const I=$('intro');I.hidden=curView!=='search'||!!$('q').value.trim()||!I.childElementCount}
-function renderIntro(){const I=$('intro');I.innerHTML='';
- if(slide&&slide.intro&&slide.intro.length){I.append(el('div','cap','What is vowel length?'));const t=el('div','tx');fill(t,slide.intro);I.append(t)}
- updateIntro()}
+let slide=null,slideErr='';
+// "What is vowel length?" pop-up, opened from the words "Vowel Length" in the title; text comes from the first slide of guide.pptx
+function showIntro(){
+ const ov=el('div','ov'),box=el('div','modal'),h=el('h3',null,'What is vowel length?');
+ const x=el('button','x','×');x.type='button';x.setAttribute('aria-label','Close');
+ const esc=e=>{if(e.key==='Escape')close()},close=()=>{ov.remove();document.removeEventListener('keydown',esc)};
+ x.onclick=close;ov.addEventListener('click',e=>{if(e.target===ov)close()});document.addEventListener('keydown',esc);
+ box.append(x,h);
+ if(slide&&slide.intro&&slide.intro.length){const t=el('div','intro');fill(t,slide.intro);box.append(t)}
+ else box.append(el('p','msg',slideErr?`Could not load the explanation (${slideErr}).`:'The explanation is not available yet. Check that guide.pptx is loading and has a “What is vowel length?” heading on its first slide.'));
+ ov.append(box);root.append(ov)}
 const kids=(n,ns,name)=>[...n.children].filter(c=>c.localName===name&&c.namespaceURI===ns);
 const first=(n,ns,name)=>n.getElementsByTagNameNS(ns,name)[0];
 function parasOf(body){
@@ -387,7 +391,6 @@ function label(type,v){
  if(type==='alphaUcPeriod')return String.fromCharCode(64+v)+'.';
  return v+'.'}
 function renderSlide(){
- renderIntro();
  const T=$('tables'),N=$('notes');T.innerHTML='';N.innerHTML='';
  const say=t=>{for(const P of [T,N])P.append(el('p','msg',t))};
  if(!slide)return say(slideErr?`Could not load the slide (${slideErr}).`:'Loading slide…');
@@ -407,7 +410,6 @@ function view(v){
  $('qrow').hidden=v!=='search';$('helpbtn').hidden=v!=='search';$('results').hidden=v!=='search';
  $('more').hidden=v!=='search'||shown>=matches.length;
  $('tables').hidden=v!=='tables';$('notes').hidden=v!=='notes';
- curView=v;updateIntro();
  window.scrollTo(0,0)}
 $('tabs').addEventListener('click',e=>{const v=e.target.dataset&&e.target.dataset.v;if(v)view(v)});
 
@@ -559,6 +561,7 @@ $('q').addEventListener('input',search);
 $('helpbtn').addEventListener('click',()=>{view('search');startWizard($('q').value.trim())});
 $('more').addEventListener('click',more);
 $('refresh').addEventListener('click',()=>load(true));
+$('vlbtn').onclick=showIntro;
 load(false);loadSlide();loadRules();
 
 })();
