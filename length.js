@@ -278,7 +278,14 @@
             st: p.st,
             r: p.r
         })) : [];
-        return {tables, notes}
+        // lead-in paragraph: first paragraph of the text box just under the "HOW THE VOWELS ARE PRONOUNCED" heading
+        // (falls back to a text box that starts "In the tables below")
+        const heading = shapes.find(s => /^how the vowels are pronounced$/i.test(s.text.replace(/\s+/g, ' ').trim()));
+        const leadBox = (heading && shapes.filter(s => s !== heading && s.text && s.y > heading.y).sort((a, b) => a.y - b.y)[0])
+            || shapes.find(s => /^in the tables below/i.test(s.text));
+        const leadP = leadBox && leadBox.ps.find(p => p.r.some(x => x.t.trim()));
+        const lead = leadP ? leadP.r : [];
+        return {tables, notes, lead}
     }
 
     async function parsePptx(buf) {
@@ -396,6 +403,11 @@
             for (const P of [T, N]) P.append(el('p', 'msg', t))
         };
         if (!slide) return say(slideErr ? `Could not load the slide (${slideErr}).` : 'Loading slide…');
+        if (slide.lead && slide.lead.length) {
+            const d = el('div', 'lead');
+            fill(d, slide.lead);
+            T.append(d)
+        }
         if (!slide.tables.length) T.append(el('p', 'msg', 'No tables found on the slide.'));
         for (const t of slide.tables) T.append(tableEl(t));
         if (!slide.notes.length) N.append(el('p', 'msg', 'No footnotes found on the slide.'));
