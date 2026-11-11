@@ -318,7 +318,7 @@ function parasOf(body){
   const pPr=kids(p,NS_A,'pPr')[0],an=pPr&&kids(pPr,NS_A,'buAutoNum')[0],r=[];
   for(const c of p.children){if(c.namespaceURI!==NS_A)continue;
    if(c.localName==='r'){const rp=kids(c,NS_A,'rPr')[0],t=kids(c,NS_A,'t')[0];
-    r.push({t:t?t.textContent:'',b:rp&&rp.getAttribute('b')==='1'?1:0,i:rp&&rp.getAttribute('i')==='1'?1:0,s:rp&&+rp.getAttribute('baseline')>0?1:0})}
+    r.push({t:t?t.textContent:'',b:rp&&rp.getAttribute('b')==='1'?1:0,i:rp&&rp.getAttribute('i')==='1'?1:0,u:rp&&rp.getAttribute('u')&&rp.getAttribute('u')!=='none'?1:0,s:rp&&+rp.getAttribute('baseline')>0?1:0})}
    else if(c.localName==='br')r.push({t:'\n'})}
   return {l:+((pPr&&pPr.getAttribute('lvl'))||0),n:an?an.getAttribute('type'):'',st:an?+(an.getAttribute('startAt')||1):1,r}})}
 const joinParas=ps=>ps.flatMap((p,i)=>i?[{t:'\n'},...p.r]:p.r);
@@ -370,7 +370,7 @@ async function loadSlide(){
  renderSlide();
 }
 function fill(node,runs){
- for(const x of runs||[]){const n=document.createElement(x.s?'sup':'span');n.textContent=x.t;if(x.b)n.style.fontWeight='700';if(x.i)n.style.fontStyle='italic';node.append(n)}
+ for(const x of runs||[]){const n=document.createElement(x.s?'sup':'span');n.textContent=x.t;if(x.b)n.style.fontWeight='700';if(x.i)n.style.fontStyle='italic';if(x.u)n.style.textDecoration='underline';node.append(n)}
  if(node.lastChild)node.lastChild.textContent=node.lastChild.textContent.replace(/\n+$/,'');
  node.dir='auto'}
 function tableEl(t){
