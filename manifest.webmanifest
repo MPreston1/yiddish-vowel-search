@@ -1,6 +1,6 @@
 {
   "name": "Yiddish Vowel Search",
-  "short_name": "Vowel Search",
+  "short_name": "Yiddish Vowel Search",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
