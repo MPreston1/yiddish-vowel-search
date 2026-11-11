@@ -1,0 +1,716 @@
+:root {
+    --modeh: 56px
+}
+
+html[data-mode=l] {
+    --bg: #eceff3;
+    --card: #fff;
+    --ink: #16202b;
+    --mut: #5d6b79;
+    --line: #d5dce4;
+    --acc: #16324f;
+    --ok: #1f7a4d;
+    --okbg: #e0f2e8;
+    --warn: #9a5200;
+    --warnbg: #fdeccf;
+    --na: #55606b;
+    --nabg: #e6e9ed
+}
+
+html[data-mode=o] {
+    --bg: #efecf3;
+    --card: #fff;
+    --ink: #1c1726;
+    --mut: #675f75;
+    --line: #dad4e3;
+    --acc: #4a2a73;
+    --ok: #1f7a4d;
+    --okbg: #e0f2e8;
+    --warn: #9a5200;
+    --warnbg: #fdeccf;
+    --na: #675f75;
+    --nabg: #e9e5ef
+}
+
+@media (prefers-color-scheme: dark) {
+    html[data-mode=l] {
+        --bg: #10151b;
+        --card: #192029;
+        --ink: #e8edf2;
+        --mut: #93a1af;
+        --line: #2a3541;
+        --acc: #9cc2ee;
+        --ok: #7fd3a3;
+        --okbg: #17372a;
+        --warn: #f1b266;
+        --warnbg: #3d2a10;
+        --na: #a3afbb;
+        --nabg: #242d37
+    }
+
+    html[data-mode=o] {
+        --bg: #131018;
+        --card: #1d1925;
+        --ink: #ece8f2;
+        --mut: #a398b3;
+        --line: #2f2839;
+        --acc: #c7a9f0;
+        --ok: #7fd3a3;
+        --okbg: #17372a;
+        --warn: #f1b266;
+        --warnbg: #3d2a10;
+        --na: #a398b3;
+        --nabg: #272031
+    }
+}
+
+* {
+    box-sizing: border-box
+}
+
+[hidden] {
+    display: none !important
+}
+
+html, body {
+    margin: 0
+}
+
+html {
+    background: var(--bg)
+}
+
+body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom)
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto;
+    height: env(safe-area-inset-top, 0px);
+    background: var(--bg);
+    z-index: 5
+}
+
+button {
+    font: inherit;
+    cursor: pointer
+}
+
+/* ---- mode switch ---- */
+html[data-mode=l] #app-o, html[data-mode=o] #app-l {
+    display: none
+}
+
+#modebar {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 4;
+    height: var(--modeh);
+    padding: 8px 16px 6px;
+    background: var(--bg)
+}
+
+#modebar .in {
+    max-width: 680px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    border: 2px solid var(--acc);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--card)
+}
+
+#modebar button {
+    flex: 1;
+    border: 0;
+    background: none;
+    color: var(--acc);
+    font-size: 15px;
+    font-weight: 600;
+    padding: 0 8px
+}
+
+#modebar button + button {
+    border-left: 2px solid var(--acc)
+}
+
+html[data-mode=l] #mode-l, html[data-mode=o] #mode-o {
+    background: var(--acc);
+    color: var(--card)
+}
+
+@media (max-width: 520px) {
+    #modebar {
+        padding: 8px 8px 6px
+    }
+}
+
+/* ---- shared by both apps ---- */
+.app {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 16px
+}
+
+.app header {
+    position: sticky;
+    top: calc(var(--modeh) + env(safe-area-inset-top, 0px));
+    background: var(--bg);
+    padding: 12px 0 10px;
+    z-index: 2
+}
+
+.app h1 {
+    font-size: 19px;
+    line-height: 1.3;
+    margin: 6px 0 0;
+    color: var(--acc)
+}
+
+.app input {
+    width: 100%;
+    font: inherit;
+    font-size: 20px;
+    padding: 14px 16px;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--ink)
+}
+
+.app input:focus {
+    outline: none;
+    border-color: var(--acc)
+}
+
+.qrow {
+    display: flex;
+    gap: 8px;
+    align-items: stretch
+}
+
+.qrow input {
+    flex: 1;
+    min-width: 0;
+    width: auto
+}
+
+.yid-toggle {
+    flex: none;
+    min-width: 48px;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--mut);
+    font-size: 20px;
+    font-weight: 600;
+    padding: 0 12px
+}
+
+.yid-toggle.on {
+    background: var(--acc);
+    border-color: var(--acc);
+    color: var(--card)
+}
+
+.app input.yid-on {
+    border-color: var(--acc)
+}
+
+.status {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--mut);
+    font-size: 13px;
+    margin-top: 8px;
+    min-height: 20px
+}
+
+.refresh {
+    background: none;
+    border: 0;
+    color: var(--acc);
+    font-size: 13px;
+    padding: 0
+}
+
+.tabs {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px
+}
+
+.tabs button {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--mut);
+    font-weight: 600
+}
+
+.tabs button.on {
+    background: var(--acc);
+    color: var(--card);
+    border-color: var(--acc)
+}
+
+.card, .note {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 0 0 12px
+}
+
+.word {
+    font: 600 34px/1.2 "Frank Ruhl Libre", "David", "Times New Roman", serif;
+    direction: rtl;
+    text-align: right;
+    margin: 0 0 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line)
+}
+
+dl {
+    display: grid;
+    grid-template-columns:7.5rem 1fr;
+    gap: 6px 12px;
+    margin: 0
+}
+
+dt {
+    color: var(--mut);
+    font-size: 14px
+}
+
+dd {
+    margin: 0;
+    overflow-wrap: anywhere
+}
+
+.empty {
+    color: var(--mut)
+}
+
+.badge {
+    display: inline-block;
+    padding: 1px 10px;
+    border-radius: 99px;
+    font-size: 14px;
+    font-weight: 600
+}
+
+.msg {
+    text-align: center;
+    color: var(--mut);
+    padding: 32px 8px
+}
+
+.more {
+    display: block;
+    margin: 4px auto 24px;
+    padding: 10px 20px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--acc)
+}
+
+button.rulelink {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    color: var(--acc);
+    text-decoration: underline;
+    text-align: start;
+    cursor: pointer
+}
+
+.tw {
+    overflow-x: auto;
+    margin: 0 0 16px
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    background: var(--card)
+}
+
+th, td {
+    border: 1px solid var(--line);
+    padding: 6px;
+    text-align: start;
+    vertical-align: top
+}
+
+th {
+    background: var(--nabg)
+}
+
+.ov {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .5);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 10;
+    padding: env(safe-area-inset-top) 8px env(safe-area-inset-bottom)
+}
+
+@media (min-width: 600px) {
+    .ov {
+        align-items: center
+    }
+}
+
+.modal {
+    position: relative;
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 14px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 85vh;
+    overflow: auto;
+    padding: 18px 18px 20px;
+    margin-bottom: 8px
+}
+
+.modal h3 {
+    margin: 0 38px 12px 0;
+    font-size: 18px;
+    line-height: 1.3;
+    overflow-wrap: anywhere
+}
+
+.x {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--nabg);
+    color: var(--ink);
+    font-size: 22px;
+    line-height: 1;
+    padding: 0
+}
+
+.rl {
+    color: var(--mut);
+    font-size: 13px;
+    margin-bottom: 2px
+}
+
+.tools {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    padding: 8px 0 0
+}
+
+.tools button {
+    background: none;
+    border: 0;
+    color: var(--acc);
+    font-size: 13px;
+    padding: 4px
+}
+
+.credit {
+    color: var(--mut);
+    font-size: 12px;
+    text-align: center;
+    padding: 8px 0 28px
+}
+
+.credit a {
+    color: var(--acc)
+}
+
+.he {
+    direction: rtl;
+    unicode-bidi: isolate
+}
+
+/* ---- Vowel length (LOKSHN) only ---- */
+.helpbtn {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px 12px;
+    border: 1px solid var(--acc);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--acc);
+    font-size: 15px;
+    font-weight: 600
+}
+
+.sound {
+    color: var(--mut);
+    font-style: italic
+}
+
+.yes {
+    background: var(--okbg);
+    color: var(--ok)
+}
+
+.exc {
+    background: var(--warnbg);
+    color: var(--warn)
+}
+
+.na {
+    background: var(--nabg);
+    color: var(--na)
+}
+
+.app-l th, .app-l td {
+    white-space: pre-line
+}
+
+.cap {
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: .02em;
+    margin: 0 0 6px
+}
+
+.fn {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 10px
+}
+
+.fn:last-child {
+    margin: 0
+}
+
+.lb {
+    flex: none;
+    min-width: 1.6em;
+    text-align: end;
+    color: var(--mut)
+}
+
+.tx {
+    flex: 1;
+    min-width: 0;
+    white-space: pre-line;
+    overflow-wrap: anywhere
+}
+
+.intro {
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-line;
+    overflow-wrap: anywhere
+}
+
+.rf {
+    margin: 0 0 12px
+}
+
+.rt {
+    white-space: pre-line;
+    overflow-wrap: anywhere
+}
+
+button.wbtn {
+    flex: 1;
+    padding: 12px;
+    font: inherit;
+    font-size: 17px;
+    font-weight: 600;
+    border-radius: 10px;
+    border: 1px solid var(--acc);
+    background: var(--card);
+    color: var(--acc);
+    cursor: pointer
+}
+
+.wiz {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    margin: 0 0 12px
+}
+
+.wmut {
+    color: var(--mut);
+    font-size: 14px;
+    margin: 0 0 10px
+}
+
+.wq {
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 14px
+}
+
+.wrow {
+    display: flex;
+    gap: 10px
+}
+
+.wnav {
+    display: flex;
+    gap: 18px;
+    margin-top: 14px
+}
+
+.wnav button {
+    background: none;
+    border: 0;
+    color: var(--acc);
+    font: inherit;
+    font-size: 14px;
+    padding: 4px 0;
+    cursor: pointer
+}
+
+.wh {
+    font-weight: 700;
+    font-size: 17px;
+    margin: 0 0 6px
+}
+
+.wd {
+    white-space: pre-line;
+    margin: 0 0 14px;
+    overflow-wrap: anywhere
+}
+
+.wn {
+    background: var(--nabg);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin: 0 0 12px;
+    font-size: 14px
+}
+
+.wo {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 2px 0 14px;
+    white-space: pre-line
+}
+
+.wlab {
+    color: var(--mut);
+    font-size: 13px;
+    margin: 0 0 2px
+}
+
+.wo a, .rt a {
+    color: var(--acc);
+    text-decoration: underline
+}
+
+@media (max-width: 520px) {
+    .app-l {
+        padding: 12px 8px
+    }
+
+    .app-l table {
+        font-size: 13px
+    }
+
+    .app-l th, .app-l td {
+        padding: 4px 3px
+    }
+}
+
+/* ---- Oy vowel only ---- */
+.app-o .badge {
+    background: var(--nabg);
+    color: var(--ink)
+}
+
+.app-o .rl {
+    margin: 10px 0 2px
+}
+
+.der {
+    color: var(--mut)
+}
+
+.sub {
+    color: var(--mut);
+    font-size: 13px;
+    margin: 10px 0 0
+}
+
+.sec {
+    font-weight: 700;
+    font-size: 14px;
+    margin: 12px 0 6px;
+    color: var(--mut);
+    letter-spacing: .02em
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    direction: rtl
+}
+
+.chip {
+    padding: 3px 10px;
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    background: var(--bg);
+    color: var(--ink);
+    font: 18px "Frank Ruhl Libre", "David", serif;
+    direction: rtl
+}
+
+.gb {
+    margin-top: 10px;
+    padding: 8px 14px;
+    border: 1px solid var(--acc);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--acc);
+    font-size: 14px;
+    font-weight: 600
+}
+
+.gt {
+    font-weight: 700;
+    margin: 0 0 4px
+}
+
+.pre {
+    white-space: pre-line;
+    overflow-wrap: anywhere
+}
+
+@media (max-width: 520px) {
+    .app-o {
+        padding: 12px 8px
+    }
+
+    .app-o table {
+        font-size: 14px
+    }
+}
