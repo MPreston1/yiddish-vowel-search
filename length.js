@@ -807,7 +807,10 @@
         startWizard($('q').value.trim())
     });
     $('more').addEventListener('click', more);
-    $('refresh').addEventListener('click', () => load(true));
+    $('refresh').addEventListener('click', () => {
+        load(true);
+        loadRules()
+    });
     $('vlbtn').onclick = showIntro;
     load(false);
     loadSlide();
