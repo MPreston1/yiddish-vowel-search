@@ -1,50 +1,13 @@
 (function () {
-    const SHEET_ID = '1Vip_J4QjpMBorfov15jmbXouSXQMAmMXT0EbYsYfPkc', GID = '671156978';
-    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&gid=${GID}`;
+    const {CSV_URL, PPTX_URL, RULES_URL} = Rules;
     const CACHE_KEY = 'vowel-lookup-v1', PAGE = 50;
-// Slide 2 tables and footnotes are read from this PowerPoint file (same folder as index.html).
-    const PPTX_URL = 'guide.pptx', SLIDE_NO = 2, INTRO_NO = 1;
-// Columns are found by header name; letter positions (A,B,C,D,P,Q,R) are the fallback.
-    const COLS = {
-        word: [['word'], 0],
-        gloss: [['gloss'], 1],
-        comp: [['component'], 2],
-        pos: [['part of speech'], 3],
-        rule: [['associated rule'], 15],
-        follows: [['follows rule?', 'follows rule'], 16],
-        notes: [['notes'], 17]
-    };
+    const SLIDE_NO = 2, INTRO_NO = 1;   // slide 2 tables and footnotes, slide 1 intro: read from guide.pptx (same folder as index.html)
     const {get: idbGet, set: idbSet} = kv('vowel-lookup');
     let rows = [], matches = [], shown = 0, sheetAt = 0;
     const root = document.getElementById('app-l'), $ = id => document.getElementById('l-' + id);
 
 
-    const norm = s => (s || '').normalize('NFD').replace(/[\u0591-\u05C7]/g, '').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').replace(/[\s\-()]/g, '').toLowerCase();
-
-    function build(csv) {
-        const t = parseCSV(csv), head = t[0].map(h => h.trim().toLowerCase()), idx = {};
-        for (const k in COLS) {
-            const [names, fb] = COLS[k];
-            const i = head.findIndex(h => names.includes(h));
-            idx[k] = i >= 0 ? i : fb
-        }
-        // Sound columns (E, F, H, I, K, L, N, O) are found by header; those letters are the fallback.
-        const sNames = ['short [o]', 'long [o]', 'short [e]', 'long [e]', 'short [i]', 'long [i]', 'short [u]', 'long [u]'],
-            sFound = sNames.map(n => head.indexOf(n)),
-            sIdx = sFound.every(i => i >= 0) ? sFound : [4, 5, 7, 8, 10, 11, 13, 14];
-        return t.slice(1).filter(r => (r[idx.word] || '').trim()).map(r => {
-            const o = {};
-            for (const k in idx) o[k] = (r[idx[k]] || '').trim();
-            o.sounds = [];
-            for (const i of sIdx) {
-                const v = (r[i] || '').trim();
-                if (v) o.sounds.push([(t[0][i] || '').trim(), v])
-            }
-            o.nw = norm(o.word);
-            o.ng = norm(o.gloss);
-            return o
-        })
-    }
+    const {norm} = Rules, build = Rules.buildRows;   // Database parsing lives in rules.js, shared with experimental.html
 
     function setStatus(msg) {
         $('count').textContent = msg
@@ -169,9 +132,6 @@
 
 
 // ---- Slide 2: tables and footnotes, read from the .pptx ----
-    const NS_A = 'http://schemas.openxmlformats.org/drawingml/2006/main',
-        NS_P = 'http://schemas.openxmlformats.org/presentationml/2006/main',
-        NS_R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
     let slide = null, slideErr = '';
 
 // "What is vowel length?" pop-up, opened from the words "Vowel Length" in the title; text comes from the first slide of guide.pptx
@@ -201,92 +161,10 @@
         root.append(ov)
     }
 
-// Slide rules are matched loosely (case, dashes, punctuation and spacing ignored); the Rules tab always wins.
-    const loose = s => (s || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+    const findSlideRule = txt => Rules.findSlideRule(slide && slide.srules, txt);
+    const showSlideRule = r => Rules.showSlideRule(r, root);
 
-    function findSlideRule(txt) {
-        const k = loose(txt);
-        if (!k || !slide) return null;
-        return (slide.srules || []).find(r => r.names.some(n => {
-            const m = loose(n);
-            return k === m || k.startsWith(m + ' ')
-        })) || null
-    }
-
-    function showSlideRule(r) {
-        const ov = el('div', 'ov'), box = el('div', 'modal'), h = el('h3');
-        h.dir = 'auto';
-        h.textContent = r.title;
-        const x = el('button', 'x', '×');
-        x.type = 'button';
-        x.setAttribute('aria-label', 'Close');
-        const esc = e => {
-            if (e.key === 'Escape') close()
-        }, close = () => {
-            ov.remove();
-            document.removeEventListener('keydown', esc)
-        };
-        x.onclick = close;
-        ov.addEventListener('click', e => {
-            if (e.target === ov) close()
-        });
-        document.addEventListener('keydown', esc);
-        box.append(x, h);
-        for (const part of r.parts) {
-            const p = el('div', 'rf');
-            if (part.label) p.append(el('div', 'rl', part.label));
-            const t = el('div', 'rt');
-            for (const para of part.paras) {
-                const d = el('div', 'sp');
-                fill(d, para.r);
-                t.append(d)
-            }
-            p.append(t);
-            box.append(p)
-        }
-        ov.append(box);
-        root.append(ov)
-    }
-
-    const kids = (n, ns, name) => [...n.children].filter(c => c.localName === name && c.namespaceURI === ns);
-    const first = (n, ns, name) => n.getElementsByTagNameNS(ns, name)[0];
-
-    function parasOf(body) {
-        return kids(body, NS_A, 'p').map(p => {
-            const pPr = kids(p, NS_A, 'pPr')[0], an = pPr && kids(pPr, NS_A, 'buAutoNum')[0], r = [];
-            for (const c of p.children) {
-                if (c.namespaceURI !== NS_A) continue;
-                if (c.localName === 'r') {
-                    const rp = kids(c, NS_A, 'rPr')[0], t = kids(c, NS_A, 't')[0];
-                    r.push({
-                        t: t ? t.textContent : '',
-                        b: rp && rp.getAttribute('b') === '1' ? 1 : 0,
-                        i: rp && rp.getAttribute('i') === '1' ? 1 : 0,
-                        u: rp && rp.getAttribute('u') && rp.getAttribute('u') !== 'none' ? 1 : 0,
-                        s: rp && +rp.getAttribute('baseline') > 0 ? 1 : 0
-                    })
-                } else if (c.localName === 'br') r.push({t: '\n'})
-            }
-            return {
-                l: +((pPr && pPr.getAttribute('lvl')) || 0),
-                n: an ? an.getAttribute('type') : '',
-                st: an ? +(an.getAttribute('startAt') || 1) : 1,
-                r
-            }
-        })
-    }
-
-    const joinParas = ps => ps.flatMap((p, i) => i ? [{t: '\n'}, ...p.r] : p.r);
-    const textOf = ps => ps.map(p => p.r.map(x => x.t).join('')).join('\n').trim();
-
-    function xfrm(el) {
-        const o = first(el, NS_A, 'off'), e = first(el, NS_A, 'ext');
-        return o ? {x: +o.getAttribute('x'), y: +o.getAttribute('y'), w: e ? +e.getAttribute('cx') : 0} : {
-            x: 0,
-            y: 0,
-            w: 0
-        }
-    }
+    const {NS_A, NS_P, NS_R, kids, first, parasOf, joinParas, textOf, xfrm} = Rules.xml;
 
     function parseSlideXml(xml) {
         const doc = new DOMParser().parseFromString(xml, 'application/xml'), tree = first(doc, NS_P, 'spTree'),
@@ -335,64 +213,15 @@
         return {tables, notes, lead}
     }
 
-// ---- Rules that live on slides, not in the Rules tab ----
-// title: heading of the pop-up. names: wording of the "Associated rule" cell (Database tab) that should open it.
-// slide: which slide holds it. find: matches the first cell of the table row (or the heading of a one-column table) with the rule.
-    const SLIDE_RULES = [
-        {title: 'Past participles with -orn', names: ['past participles with -orn'], slide: 7, find: /^participles with \[-oyrn\]/i},
-        {title: 'Short perfect stems', names: ['short perfect stems', 'short perfect stem patterns'], slide: 5, find: /^short perfect stem patterns/i}
-    ];
-
-    function slideRuleFrom(xml, spec) {
-        const doc = new DOMParser().parseFromString(xml, 'application/xml');
-        for (const tbl of doc.getElementsByTagNameNS(NS_A, 'tbl')) {
-            const rows = kids(tbl, NS_A, 'tr').map(tr => kids(tr, NS_A, 'tc').map(tc => {
-                const tb = kids(tc, NS_A, 'txBody')[0];
-                return tb ? parasOf(tb).filter(p => p.r.some(x => x.t.trim())) : []
-            }));
-            const ri = rows.findIndex(r => r[0] && spec.find.test(textOf(r[0]).replace(/\s+/g, ' ')));
-            if (ri < 0) continue;
-            const parts = [];
-            if (ri === 0) {
-                // heading row of a one-column table: the rule's text is in the rows below it
-                for (const row of rows.slice(1)) for (const c of row) if (c.length) parts.push({label: '', paras: c})
-            } else {
-                // a row of a table with column headings: the other cells hold the description, examples, etc.
-                rows[ri].slice(1).forEach((c, i) => {
-                    if (c.length) parts.push({label: textOf(rows[0][i + 1] || []), paras: c})
-                })
-            }
-            if (parts.length) return {title: spec.title, names: spec.names, parts}
-        }
-        return null
-    }
-
     async function parsePptx(buf) {
-        const zip = await JSZip.loadAsync(buf),
-            read = async f => new DOMParser().parseFromString(await zip.file(f).async('string'), 'application/xml');
-        const pres = await read('ppt/presentation.xml'), rels = await read('ppt/_rels/presentation.xml.rels');
-        const slideXml = async n => {
-            const id = pres.getElementsByTagNameNS(NS_P, 'sldId')[n - 1];
-            if (!id) throw new Error('slide ' + n + ' not found');
-            const rid = id.getAttributeNS(NS_R, 'id'),
-                rel = [...rels.getElementsByTagName('Relationship')].find(r => r.getAttribute('Id') === rid);
-            const tg = rel.getAttribute('Target'), path = tg.startsWith('/') ? tg.slice(1) : 'ppt/' + tg;
-            return zip.file(path).async('string')
-        };
+        const {slideXml} = await Rules.openPptx(buf);
         const out = parseSlideXml(await slideXml(SLIDE_NO));
         try {
             out.intro = parseIntro(await slideXml(INTRO_NO))
         } catch (e) {
             out.intro = null
         }
-        out.srules = [];
-        for (const spec of SLIDE_RULES) {
-            try {
-                const r = slideRuleFrom(await slideXml(spec.slide), spec);
-                if (r) out.srules.push(r)
-            } catch (e) {
-            }
-        }
+        out.srules = await Rules.parseSlideRules(slideXml);
         return out
     }
 
@@ -438,18 +267,7 @@
         renderSlide();
     }
 
-    function fill(node, runs) {
-        for (const x of runs || []) {
-            const n = document.createElement(x.s ? 'sup' : 'span');
-            n.textContent = x.t;
-            if (x.b) n.style.fontWeight = '700';
-            if (x.i) n.style.fontStyle = 'italic';
-            if (x.u) n.style.textDecoration = 'underline';
-            node.append(n)
-        }
-        if (node.lastChild) node.lastChild.textContent = node.lastChild.textContent.replace(/\n+$/, '');
-        node.dir = 'auto'
-    }
+    const fill = Rules.fill;
 
     function tableEl(t) {
         const tb = el('table');
@@ -541,7 +359,6 @@
 
 
 // ---- Rules tab: popup for the associated rule ----
-    const RULES_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&sheet=Rules`;
     let rules = [], rhead = ['', '', ''], ruleExact = new Map(), ruleLoose = new Map();
     const clean = s => (s || '').replace(/\s+/g, ' ').trim().toLowerCase(),
         noSlash = s => clean((s || '').replace(/\//g, ''));
@@ -578,13 +395,9 @@
             if (!res.ok) throw new Error(res.status);
             const text = await res.text();
             if (text.trim().startsWith('<')) throw new Error('Sheet is not public');
-            const t = parseCSV(text);
-            rhead = [1, 2, 3].map(i => ((t[0] || [])[i] || '').trim());
-            rules = t.slice(1).filter(r => (r[1] || '').trim()).map(r => ({
-                b: r[1].trim(),
-                c: (r[2] || '').trim(),
-                d: (r[3] || '').trim()
-            }));
+            const b = Rules.buildRules(text);
+            rhead = b.head;
+            rules = b.rules;
             buildRuleIdx();
             try {
                 await idbSet('rules-v1', {at: Date.now(), head: rhead, rules})
@@ -595,85 +408,16 @@
         if ($('q').value.trim()) search();
     }
 
-    const PLACE_URL = 'https://yivo.org/yiddishland-topo';
+    const setText = Rules.setText;
 
-// Shows text in a node; for the Place names rule, the word "here" becomes a link.
-    function setText(node, text, ruleName) {
-        const m = /^place names$/i.test(ruleName || '') ? /\bhere\b/i.exec(text) : null;
-        if (!m) {
-            node.textContent = text;
-            return
-        }
-        node.textContent = '';
-        node.append(text.slice(0, m.index));
-        const a = document.createElement('a');
-        a.href = PLACE_URL;
-        a.target = '_blank';
-        a.rel = 'noopener';
-        a.textContent = m[0];
-        node.append(a, text.slice(m.index + m[0].length))
-    }
-
-    function showRule(r) {
-        const ov = el('div', 'ov'), box = el('div', 'modal'), h = el('h3');
-        h.dir = 'auto';
-        h.textContent = r.b;
-        const x = el('button', 'x', '×');
-        x.type = 'button';
-        x.setAttribute('aria-label', 'Close');
-        const esc = e => {
-            if (e.key === 'Escape') close()
-        }, close = () => {
-            ov.remove();
-            document.removeEventListener('keydown', esc)
-        };
-        x.onclick = close;
-        ov.addEventListener('click', e => {
-            if (e.target === ov) close()
-        });
-        document.addEventListener('keydown', esc);
-        box.append(x, h);
-        for (const [lab, txt, isOut] of [[rhead[1], r.c, false], [rhead[2], r.d, true]]) {
-            if (!txt) continue;
-            const p = el('div', 'rf');
-            if (lab) p.append(el('div', 'rl', lab));
-            const t = el('div', 'rt');
-            t.dir = 'auto';
-            if (isOut) setText(t, txt, r.b); else t.textContent = txt;
-            p.append(t);
-            box.append(p)
-        }
-        ov.append(box);
-        root.append(ov)
-    }
+    const showRule = r => Rules.showRule(r, rhead, root);
 
 // ---- Guided questions: which rule applies? (offered when a search has no matches) ----
 // Walks the Rules tab in sheet order: the first rule that describes the word is the one that applies.
-    const isLK = r => /^loshn-koydesh$/i.test(r.b || '');
     const isGmc = r => /^gmc:/i.test(r.b || '') || /applies only to words from the germanic component/i.test(r.c || '');
 
-    function wizSeq(branch) {
-        const secs = [];
-        let cur = {head: '', items: []};
-        secs.push(cur);
-        for (const r of rules) {
-            if (!r.c && !r.d) {
-                if (/^from now on/i.test(r.b)) cur.items.push({note: r.b});
-                else {
-                    cur = {head: r.b, items: []};
-                    secs.push(cur)
-                }
-            } else cur.items.push(r)
-        }
-        const intro = secs.find(x => /^introductory$/i.test(x.head)), lk = secs.find(x => isLK({b: x.head})),
-            non = secs.find(x => /^non-loshn-koydesh$/i.test(x.head));
-        if (!intro || !lk || !non) return null;
-        if (branch === 'lk') return lk.items;
-        // A rule that says it is only marked when no later rule applies (Slavic) is asked last.
-        const main = [], late = [];
-        for (const it of non.items) (it.c && /not covered by any of the subsequent rules/i.test(it.c) ? late : main).push(it);
-        return [...intro.items.filter(r => !isLK(r) && !/^unique cases$/i.test(r.b)), ...main, ...late]
-    }
+    // Rules in the order they are asked (built in rules.js, shared with experimental.html)
+    const wizSeq = branch => Rules.sequence(rules, branch, slide && slide.srules);
 
     function wizNext(branch, i, notes) {
         const seq = wizSeq(branch);
@@ -720,13 +464,14 @@
 // non-loshn-koydesh path fall back to place name / unstressed / derived / English borrowing by position.
     function wizQuestion(s) {
         const r = s.rule, b = r.b || '', c = r.c || '';
+        if (r.q) return r.q;
         if (/place name/i.test(b)) return 'Is the word a place name?';
         if (/unstress/i.test(b)) return 'Is the vowel unstressed?';
         if (/^derived$/i.test(b)) return 'Is the word derived?';
         if (/english/i.test(b)) return 'Is the word a borrowing from English?';
         if (/slavic/i.test(b) || /not covered by any of the subsequent rules/i.test(c)) return 'Is the word of Slavic origin?';
         if (s.branch === 'non') {
-            const n = wz.hist.filter(h => h.t === 'rule' && h.branch === 'non').length;
+            const n = wz.hist.filter(h => h.t === 'rule' && h.branch === 'non' && !h.rule.srule).length;
             if (n < 4) return ['Is the word a place name?', 'Is the vowel unstressed?', 'Is the word derived?', 'Is the word a borrowing from English?'][n]
         }
         return 'Does this rule apply?'
@@ -784,7 +529,7 @@
             if (/^derived$/i.test(r.b)) box.append(el('p', 'wn', 'Next, find the vowel length of the root word: start over with the root.'));
             const row = el('div', 'wrow'), fb = el('button', 'wbtn', 'Show the full rule');
             fb.type = 'button';
-            fb.onclick = () => showRule(r);
+            fb.onclick = () => r.srule ? showSlideRule(r.srule) : showRule(r);
             row.append(fb);
             box.append(row)
         } else if (s.t === 'none') box.append(el('p', 'wq', 'None of the rules matched this word.'));

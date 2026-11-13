@@ -1,6 +1,6 @@
 // Service worker for the combined Yiddish Vowel Search app.
-const V = 'vowel-search-v3';
-const SHELL = ['./', 'index.html', 'style.css', 'shared.js', 'length.js', 'oy.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'jszip.min.js', 'guide.pptx'];
+const V = 'vowel-search-v4';
+const SHELL = ['./', 'index.html', 'style.css', 'shared.js', 'rules.js', 'length.js', 'oy.js', 'rulefinder.js', 'experimental.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'jszip.min.js', 'guide.pptx'];
 self.addEventListener('install', e => {
     e.waitUntil(caches.open(V).then(c => Promise.all(SHELL.map(u => c.add(u).catch(() => {
     })))).then(() => self.skipWaiting()))

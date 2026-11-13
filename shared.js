@@ -176,6 +176,7 @@ const YT = (() => {
 
 // ---- mode switch: Vowel length / Oy vowel ----
 (function () {
+    if (!document.getElementById('modebar')) return;   // pages without the mode switch (experimental.html)
     const NAMES = {l: 'length', o: 'oy'}, COLORS = {l: '#16324f', o: '#4a2a73'}, H = document.documentElement;
 
     function paint(m) {
