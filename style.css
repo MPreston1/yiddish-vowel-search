@@ -722,3 +722,11 @@ button.wbtn {
         font-size: 14px
     }
 }
+
+.rt .sp {
+    margin: 0 0 6px
+}
+
+.rt .sp:last-child {
+    margin: 0
+}
