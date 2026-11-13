@@ -65,7 +65,8 @@
     const cuts = [0];
     for (let k = 0; k + 1 < nuclei.length; k++) {
       const a = nuclei[k], b = nuclei[k + 1], c = b - a - 1;
-      cuts.push(boundary > a && boundary <= b ? boundary : (c <= 1 ? a + 1 : a + 2));
+      // a syllabic ל/ן is a syllable by itself: every consonant before it stays with the previous syllable
+      cuts.push(boundary > a && boundary <= b ? boundary : (U[b].syl ? b : (c <= 1 ? a + 1 : a + 2)));
     }
     cuts.push(U.length);
     const syllables = [];
