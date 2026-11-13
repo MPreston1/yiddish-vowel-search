@@ -148,12 +148,12 @@
         const sn = (r.sounds || []).length ? el('div') : null;
         if (sn) for (const [h, v] of r.sounds) sn.append(el('div', null, h ? `${h} - ${v}` : v));
         row('Sound', null, sn);
-        const rl = r.rule ? findRule(r.rule) : null;
-        if (rl) {
+        const rl = r.rule ? findRule(r.rule) : null, sr = !rl && r.rule ? findSlideRule(r.rule) : null;
+        if (rl || sr) {
             const rb = el('button', 'rulelink', r.rule);
             rb.type = 'button';
             rb.dir = 'auto';
-            rb.onclick = () => showRule(rl);
+            rb.onclick = () => rl ? showRule(rl) : showSlideRule(sr);
             row('Associated rule', null, rb)
         } else row('Associated rule', r.rule);
         let fb = null;
@@ -197,6 +197,53 @@
             fill(t, slide.intro);
             box.append(t)
         } else box.append(el('p', 'msg', slideErr ? `Could not load the explanation (${slideErr}).` : 'The explanation is not available yet. Check that guide.pptx is loading and has a “What is vowel length?” heading on its first slide.'));
+        ov.append(box);
+        root.append(ov)
+    }
+
+// Slide rules are matched loosely (case, dashes, punctuation and spacing ignored); the Rules tab always wins.
+    const loose = s => (s || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+
+    function findSlideRule(txt) {
+        const k = loose(txt);
+        if (!k || !slide) return null;
+        return (slide.srules || []).find(r => r.names.some(n => {
+            const m = loose(n);
+            return k === m || k.startsWith(m + ' ')
+        })) || null
+    }
+
+    function showSlideRule(r) {
+        const ov = el('div', 'ov'), box = el('div', 'modal'), h = el('h3');
+        h.dir = 'auto';
+        h.textContent = r.title;
+        const x = el('button', 'x', '×');
+        x.type = 'button';
+        x.setAttribute('aria-label', 'Close');
+        const esc = e => {
+            if (e.key === 'Escape') close()
+        }, close = () => {
+            ov.remove();
+            document.removeEventListener('keydown', esc)
+        };
+        x.onclick = close;
+        ov.addEventListener('click', e => {
+            if (e.target === ov) close()
+        });
+        document.addEventListener('keydown', esc);
+        box.append(x, h);
+        for (const part of r.parts) {
+            const p = el('div', 'rf');
+            if (part.label) p.append(el('div', 'rl', part.label));
+            const t = el('div', 'rt');
+            for (const para of part.paras) {
+                const d = el('div', 'sp');
+                fill(d, para.r);
+                t.append(d)
+            }
+            p.append(t);
+            box.append(p)
+        }
         ov.append(box);
         root.append(ov)
     }
@@ -288,6 +335,38 @@
         return {tables, notes, lead}
     }
 
+// ---- Rules that live on slides, not in the Rules tab ----
+// title: heading of the pop-up. names: wording of the "Associated rule" cell (Database tab) that should open it.
+// slide: which slide holds it. find: matches the first cell of the table row (or the heading of a one-column table) with the rule.
+    const SLIDE_RULES = [
+        {title: 'Past participles with -orn', names: ['past participles with -orn'], slide: 7, find: /^participles with \[-oyrn\]/i},
+        {title: 'Short perfect stems', names: ['short perfect stems', 'short perfect stem patterns'], slide: 5, find: /^short perfect stem patterns/i}
+    ];
+
+    function slideRuleFrom(xml, spec) {
+        const doc = new DOMParser().parseFromString(xml, 'application/xml');
+        for (const tbl of doc.getElementsByTagNameNS(NS_A, 'tbl')) {
+            const rows = kids(tbl, NS_A, 'tr').map(tr => kids(tr, NS_A, 'tc').map(tc => {
+                const tb = kids(tc, NS_A, 'txBody')[0];
+                return tb ? parasOf(tb).filter(p => p.r.some(x => x.t.trim())) : []
+            }));
+            const ri = rows.findIndex(r => r[0] && spec.find.test(textOf(r[0]).replace(/\s+/g, ' ')));
+            if (ri < 0) continue;
+            const parts = [];
+            if (ri === 0) {
+                // heading row of a one-column table: the rule's text is in the rows below it
+                for (const row of rows.slice(1)) for (const c of row) if (c.length) parts.push({label: '', paras: c})
+            } else {
+                // a row of a table with column headings: the other cells hold the description, examples, etc.
+                rows[ri].slice(1).forEach((c, i) => {
+                    if (c.length) parts.push({label: textOf(rows[0][i + 1] || []), paras: c})
+                })
+            }
+            if (parts.length) return {title: spec.title, names: spec.names, parts}
+        }
+        return null
+    }
+
     async function parsePptx(buf) {
         const zip = await JSZip.loadAsync(buf),
             read = async f => new DOMParser().parseFromString(await zip.file(f).async('string'), 'application/xml');
@@ -305,6 +384,14 @@
             out.intro = parseIntro(await slideXml(INTRO_NO))
         } catch (e) {
             out.intro = null
+        }
+        out.srules = [];
+        for (const spec of SLIDE_RULES) {
+            try {
+                const r = slideRuleFrom(await slideXml(spec.slide), spec);
+                if (r) out.srules.push(r)
+            } catch (e) {
+            }
         }
         return out
     }
@@ -433,6 +520,7 @@
         if (slideErr) {
             for (const P of [T, N]) P.append(el('p', 'msg', `Showing saved copy (${slideErr}).`))
         }
+        if ($('q').value.trim()) search()
     }
 
     function view(v) {
@@ -809,7 +897,8 @@
     $('more').addEventListener('click', more);
     $('refresh').addEventListener('click', () => {
         load(true);
-        loadRules()
+        loadRules();
+        loadSlide()
     });
     $('vlbtn').onclick = showIntro;
     load(false);
