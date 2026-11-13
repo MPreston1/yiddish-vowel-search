@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Experimental rule finder</title>
+<style>
+:root{--bg:#eceff3;--card:#fff;--ink:#16202b;--mut:#5d6b79;--line:#d5dce4;--acc:#16324f;--ok:#1f7a4d;--okbg:#e0f2e8;--warn:#9a5200;--warnbg:#fdeccf;--na:#55606b;--nabg:#e6e9ed;--bad:#a12a2a;--badbg:#f8dcdc}
+@media(prefers-color-scheme:dark){:root{--bg:#10151b;--card:#192029;--ink:#e8edf2;--mut:#93a1af;--line:#2a3541;--acc:#9cc2ee;--ok:#7fd3a3;--okbg:#17372a;--warn:#f1b266;--warnbg:#3d2a10;--na:#a3afbb;--nabg:#242d37;--bad:#f09a9a;--badbg:#3d1c1c}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+main{max-width:680px;margin:0 auto;padding:16px}
+h1{font-size:19px;line-height:1.3;margin:6px 0 4px;color:var(--acc)}
+h2{font-size:15px;margin:18px 0 8px}
+.mut{color:var(--mut);font-size:14px;margin:0 0 8px}
+input#w{flex:1;min-width:0;width:auto;font:inherit;font-size:22px;padding:12px 14px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+input#w:focus,input#w.yid-on{outline:none;border-color:var(--acc)}
+.qrow{display:flex;gap:8px;align-items:stretch}
+.yid-toggle{flex:none;min-width:48px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--mut);font:inherit;font-size:20px;font-weight:600;padding:0 12px;cursor:pointer}
+.yid-toggle.on{background:var(--acc);border-color:var(--acc);color:var(--card)}
+.status{color:var(--mut);font-size:13px;margin:8px 0 0;min-height:18px}
+.opts{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 0;align-items:center}
+select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+label{display:flex;gap:6px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:8px;direction:rtl;margin:6px 0 10px}
+.chip{font:600 28px/1.2 "Frank Ruhl Libre","David","Times New Roman",serif;padding:6px 14px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);cursor:pointer}
+.chip.on{background:var(--acc);border-color:var(--acc);color:var(--card)}
+.pre{display:flex;flex-wrap:wrap;gap:6px;direction:rtl;margin:6px 0 4px}
+.ltr{font:600 22px/1.2 "Frank Ruhl Libre","David","Times New Roman",serif;padding:3px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);cursor:pointer}
+.ltr.on{background:var(--warnbg);border-color:var(--warn);color:var(--warn)}
+.ctx{background:var(--nabg);border-radius:8px;padding:8px 10px;font-size:14px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0 0 10px}
+.res .name{font-weight:700;font-size:17px}.res .out{font-size:24px;font-weight:700;margin:2px 0 8px;white-space:pre-line}
+.lab{color:var(--mut);font-size:13px}
+.btn{font:inherit;font-size:15px;font-weight:600;padding:8px 14px;border-radius:10px;border:1px solid var(--acc);background:var(--card);color:var(--acc);cursor:pointer}
+.step{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 12px;margin:0 0 8px}
+.step.win{border:2px solid var(--ok)}.step.after{opacity:.6}
+.pill{display:inline-block;min-width:42px;text-align:center;border-radius:99px;padding:1px 10px;font-size:13px;font-weight:700;margin-right:8px}
+.p-yes{background:var(--okbg);color:var(--ok)}.p-no{background:var(--nabg);color:var(--na)}
+.sn{font-weight:600;overflow-wrap:anywhere}.tag{font-size:12px;color:var(--mut);margin-left:6px}
+.why{color:var(--mut);font-size:14px;margin-top:3px}
+.tg{display:inline-flex;margin-right:8px;vertical-align:middle}
+.tg button{padding:1px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+.tg button:first-child{border-radius:99px 0 0 99px}.tg button:last-child{border-radius:0 99px 99px 0}
+.tg button.on{background:var(--acc);color:var(--card);border-color:var(--acc)}
+.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
+.msg{text-align:center;color:var(--mut);padding:24px 8px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:10;padding:env(safe-area-inset-top) 8px env(safe-area-inset-bottom)}
+@media(min-width:600px){.ov{align-items:center}}
+.modal{position:relative;background:var(--card);color:var(--ink);border-radius:14px;max-width:640px;width:100%;max-height:85vh;overflow:auto;padding:18px 18px 20px;margin-bottom:8px}
+.modal h3{margin:0 38px 12px 0;font-size:18px;line-height:1.3;overflow-wrap:anywhere}
+.x{position:absolute;top:8px;right:8px;width:34px;height:34px;border:0;border-radius:50%;background:var(--nabg);color:var(--ink);font-size:22px;line-height:1;padding:0}
+.rf{margin:0 0 12px}.rt{white-space:pre-line;overflow-wrap:anywhere}.rt a{color:var(--acc)}
+</style>
+</head>
+<body>
+<main>
+<h1>Experimental rule finder</h1>
+<p class="mut">For words that are not loshn-koydesh. The app answers every question it can from the spelling and shows each answer, so you can see where it goes wrong. It loads the rules and the Database itself, and keeps a saved copy for offline use.</p>
+<div class="qrow"><input id="w" type="search" dir="auto" lang="yi" placeholder="Type a word…" autocomplete="off" autocapitalize="off" spellcheck="false">
+<button type="button" id="yt" class="yid-toggle" title="Toggle Yiddish typing (or type ~)" aria-pressed="false" aria-label="Toggle Yiddish typing">A</button></div>
+<div class="status" id="status"></div>
+<div class="opts">
+<label>Source <select id="src"><option value="germanic">Germanic</option><option value="slavic">Slavic</option><option value="english">English</option><option value="other">Other / not sure</option></select></label>
+<label><input type="checkbox" id="verb"> Verb (ignore the -ן / -ען ending)</label>
+<label><input type="checkbox" id="syl" checked> Final ל / ן after a consonant is syllabic</label>
+</div>
+<div id="out"></div>
+</main>
+<script src="rulefinder.js"></script>
+<script>
+// ---- shared helpers ----
+function kv(name) {
+    const open = () => new Promise((res, rej) => {
+        const r = indexedDB.open(name, 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('kv');
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error)
+    });
+    return {
+        async get(k) {
+            const db = await open();
+            return new Promise((res, rej) => {
+                const r = db.transaction('kv').objectStore('kv').get(k);
+                r.onsuccess = () => res(r.result);
+                r.onerror = () => rej(r.error)
+            })
+        },
+        async set(k, v) {
+            const db = await open();
+            return new Promise((res, rej) => {
+                const t = db.transaction('kv', 'readwrite');
+                t.objectStore('kv').put(v, k);
+                t.oncomplete = () => res();
+                t.onerror = () => rej(t.error)
+            })
+        }
+    }
+}
+
+function parseCSV(t) {
+    const out = [];
+    let r = [], f = '', q = false;
+    for (let i = 0; i < t.length; i++) {
+        const c = t[i];
+        if (q) {
+            if (c == '"') {
+                if (t[i + 1] == '"') {
+                    f += '"';
+                    i++
+                } else q = false
+            } else f += c
+        } else if (c == '"') q = true;
+        else if (c == ',') {
+            r.push(f);
+            f = ''
+        } else if (c == '\n') {
+            r.push(f);
+            out.push(r);
+            r = [];
+            f = ''
+        } else if (c != '\r') f += c
+    }
+    if (f || r.length) {
+        r.push(f);
+        out.push(r)
+    }
+    return out
+}
+
+// ---- Yiddish typing mode (Yiddish Klal layout), shared by both tools: type ~ to toggle, ~~ for a literal ~
+// Maps physical keys (event.code) to [plain, shift, option, shift+option]; other keys type normally.
+const YK_MAP = {
+    KeyA: ['אַ', 'א'],
+    KeyS: ['ס', 'ת'],
+    KeyD: ['ד', 'דזש'],
+    KeyF: ['פֿ', 'ף'],
+    KeyG: ['ג', 'דזש'],
+    KeyH: ['ה', 'ח'],
+    KeyJ: ['ײ', 'דזש'],
+    KeyK: ['ק', 'כּ'],
+    KeyL: ['ל', 'ל'],
+    KeyQ: ['ק', 'כּ'],
+    KeyW: ['ש', 'שׂ'],
+    KeyE: ['ע', 'ײ'],
+    KeyR: ['ר', 'טש'],
+    KeyT: ['ט', 'תּ', 'תֿ'],
+    KeyY: ['ײַ', 'ױ'],
+    KeyU: ['ו', 'וּ'],
+    KeyI: ['י', 'יִ'],
+    KeyO: ['אָ', 'ױ'],
+    KeyP: ['פּ', 'פ'],
+    KeyZ: ['ז', 'זש'],
+    KeyX: ['כ', 'ך', 'כֿ'],
+    KeyC: ['צ', 'ץ'],
+    KeyV: ['װ', 'בֿ'],
+    KeyB: ['ב', 'בּ'],
+    KeyN: ['נ', 'ן'],
+    KeyM: ['מ', 'ם'],
+    Minus: ['־', '-', '–', '—'],
+    Equal: ['=', '+', '⸗'],
+    BracketLeft: ['[', '„', '{', '’'],
+    BracketRight: [']', '“', '}', '”'],
+    Backslash: ['\\', '|', '׳', '״'],
+    Quote: ["'", '"', '′', '″'],
+    Semicolon: [';', ':', '…']
+};
+
+const YT = (() => {
+    let on = false, lastTilde = false;
+    const pairs = [];
+    try {
+        const v = localStorage.getItem('yiddishTyping');
+        on = v !== null ? v === '1' : (localStorage.getItem('lokshnYiddishTyping') === '1' || localStorage.getItem('oyYiddishTyping') === '1')
+    } catch (e) {
+    }
+
+    function paint() {
+        for (const [inp, b] of pairs) {
+            b.textContent = on ? 'א' : 'A';
+            b.classList.toggle('on', on);
+            b.setAttribute('aria-pressed', on);
+            inp.classList.toggle('yid-on', on)
+        }
+    }
+
+    function set(v) {
+        on = v;
+        try {
+            localStorage.setItem('yiddishTyping', v ? '1' : '0')
+        } catch (e) {
+        }
+        paint()
+    }
+
+    function insert(inp, text) {
+        let ok = false;
+        try {
+            ok = document.execCommand('insertText', false, text)
+        } catch (e) {
+        }
+        if (!ok) {
+            const a = inp.selectionStart == null ? inp.value.length : inp.selectionStart,
+                b = inp.selectionEnd == null ? a : inp.selectionEnd;
+            inp.setRangeText(text, a, b, 'end');
+            inp.dispatchEvent(new Event('input', {bubbles: true}))
+        }
+    }
+
+    function attach(inp, btn) {
+        pairs.push([inp, btn]);
+        inp.addEventListener('keydown', e => {
+            if (e.isComposing || e.ctrlKey || e.metaKey) return;
+            if (e.key === '~') {
+                e.preventDefault();
+                if (e.repeat) return;
+                if (lastTilde) {
+                    lastTilde = false;
+                    set(!on);
+                    insert(e.target, '~')
+                } else {
+                    lastTilde = true;
+                    set(!on)
+                }
+                return
+            }
+            if (['Shift', 'Alt', 'Control', 'Meta', 'CapsLock'].includes(e.key)) return;
+            lastTilde = false;
+            if (!on || e.getModifierState('CapsLock')) return;
+            const m = YK_MAP[e.code];
+            if (!m) return;
+            const out = e.altKey ? (e.shiftKey ? m[3] : m[2]) : (e.shiftKey ? m[1] : m[0]);
+            if (!out) return;
+            e.preventDefault();
+            insert(e.target, out)
+        });
+        btn.addEventListener('mousedown', e => e.preventDefault());
+        btn.addEventListener('click', () => {
+            set(!on);
+            inp.focus()
+        });
+        paint()
+    }
+
+    return {attach}
+})();
+const $=id=>document.getElementById(id);
+const norm=s=>(s||'').replace(/\s+/g,' ').replace(/\//g,'').trim().toLowerCase();
+const strip=s=>(s||'').normalize('NFD').replace(/[\u0591-\u05C7\u05BE\-\s()]/g,'').replace(/\u05F0/g,'וו').replace(/\u05F1/g,'וי').replace(/\u05F2/g,'יי').toLowerCase();
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+const SHEET_ID='1Vip_J4QjpMBorfov15jmbXouSXQMAmMXT0EbYsYfPkc',GID='671156978';
+const CSV_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&gid=${GID}`;
+const RULES_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&sheet=Rules`;
+const {get:idbGet,set:idbSet}=kv('vowel-lookup');   // same saved copy the main app uses
+const setStatus=t=>{$('status').textContent=t};
+let rules=[],rhead=['','',''],rows=[],st={stress:null,boundary:null,manual:{}};
+const COLS={word:[['word'],0],rule:[['associated rule'],15],follows:[['follows rule?','follows rule'],16]};
+function buildRows(csv){
+ const t=parseCSV(csv),head=t[0].map(h=>h.trim().toLowerCase()),idx={};
+ for(const k in COLS){const [names,fb]=COLS[k];const i=head.findIndex(h=>names.includes(h));idx[k]=i>=0?i:fb}
+ const sNames=['short [o]','long [o]','short [e]','long [e]','short [i]','long [i]','short [u]','long [u]'],
+  sFound=sNames.map(n=>head.indexOf(n)),sIdx=sFound.every(i=>i>=0)?sFound:[4,5,7,8,10,11,13,14];
+ return t.slice(1).filter(r=>(r[idx.word]||'').trim()).map(r=>{
+  const o={};for(const k in idx)o[k]=(r[idx[k]]||'').trim();
+  o.sounds=[];for(const i of sIdx){const v=(r[i]||'').trim();if(v)o.sounds.push([(t[0][i]||'').trim(),v])}
+  return o})}
+function buildRules(text){
+ const t=parseCSV(text);
+ return {head:[1,2,3].map(i=>((t[0]||[])[i]||'').trim()),
+  rules:t.slice(1).filter(r=>(r[1]||'').trim()).map(r=>({b:r[1].trim(),c:(r[2]||'').trim(),d:(r[3]||'').trim()}))}}
+
+
+
+// Rules in sheet order for a non-loshn-koydesh word (same order as the main app's question helper).
+const isLK=r=>/^loshn-koydesh$/i.test(r.b||'');
+function ruleSeq(){
+ const secs=[];let cur={head:'',items:[]};secs.push(cur);
+ for(const r of rules){
+  if(!r.c&&!r.d){if(/^from now on/i.test(r.b))cur.items.push({note:r.b});else{cur={head:r.b,items:[]};secs.push(cur)}}
+  else cur.items.push(r)}
+ const intro=secs.find(x=>/^introductory$/i.test(x.head)),non=secs.find(x=>/^non-loshn-koydesh$/i.test(x.head));
+ if(!intro||!non)return null;
+ const main=[],late=[];
+ for(const it of non.items)(it.c&&/not covered by any of the subsequent rules/i.test(it.c)?late:main).push(it);
+ return [...intro.items.filter(r=>!isLK(r)&&!/^unique cases$/i.test(r.b)),...main,...late].filter(x=>!x.note)}
+
+const PLACE_URL='https://yivo.org/yiddishland-topo';
+function setText(node,text,ruleName){
+ const m=/^place names$/i.test(ruleName||'')?/\bhere\b/i.exec(text):null;
+ if(!m){node.textContent=text;return}
+ node.textContent='';node.append(text.slice(0,m.index));
+ const a=document.createElement('a');a.href=PLACE_URL;a.target='_blank';a.rel='noopener';a.textContent=m[0];
+ node.append(a,text.slice(m.index+m[0].length))}
+function showRule(r){
+ const ov=el('div','ov'),box=el('div','modal'),h=el('h3');h.dir='auto';h.textContent=r.b;
+ const x=el('button','x','×');x.type='button';x.setAttribute('aria-label','Close');
+ const esc=e=>{if(e.key==='Escape')close()},close=()=>{ov.remove();document.removeEventListener('keydown',esc)};
+ x.onclick=close;ov.addEventListener('click',e=>{if(e.target===ov)close()});document.addEventListener('keydown',esc);
+ box.append(x,h);
+ for(const [lab,txt,isOut] of [[rhead[1],r.c,false],[rhead[2],r.d,true]]){if(!txt)continue;
+  const p=el('div','rf');if(lab)p.append(el('div','lab',lab));const t=el('div','rt');t.dir='auto';if(isOut)setText(t,txt,r.b);else t.textContent=txt;p.append(t);box.append(p)}
+ ov.append(box);document.body.append(ov)}
+
+const lenOf=s=>{const m=/^(short|long)/i.exec(s||'');return m?m[1].toLowerCase():''};
+function render(){
+ const out=$('out');out.innerHTML='';
+ const say=t=>out.append(el('p','msg',t));
+ const word=$('w').value.trim();
+ if(!rules.length)return say('The rules are not loaded yet. Check your connection; they will appear as soon as the sheet loads.');
+ const seq=ruleSeq();if(!seq)return say('The Rules tab does not have the expected sections.');
+ if(!word)return say('Type a word to begin.');
+ const verb=$('verb').checked,src=$('src').value;
+ let w=word,rootNote='';
+ if(verb){const r1=w.replace(/ען$/,''),r=(r1!==w&&RuleFinder.analyze(r1,0,{syllabic:false}).nuclei.length)?r1:w.replace(/ן$/,'');if(r!==w){w=r;rootNote=`Analyzing the root: ${w}`}}
+ const so={syllabic:$('syl').checked},a0=RuleFinder.analyze(w,0,so);
+ if(!a0.nuclei.length)return say('No vowels were found in this word.');
+ const bnd=st.boundary>0&&st.boundary<a0.units.length?st.boundary:0,a=bnd?RuleFinder.analyze(w,bnd,so):a0;
+ const guess=RuleFinder.guessStress(a),stress=st.stress!=null&&st.stress<a.nuclei.length?st.stress:guess;
+ if(rootNote)out.append(el('p','mut',rootNote));
+ if(a0.units.some(u=>u.syl))out.append(el('p','mut',`Final ${w.slice(-1)} after a consonant is treated as a syllabic vowel.`));
+ // 0. stressed prefix: its end counts as a root boundary
+ if(a0.units.length>1){
+  out.append(el('p','mut',bnd?`Stressed prefix: ${a0.units.slice(0,bnd).map(u=>u.s).join('')}. Its end counts as a root boundary. Tap its last letter again to clear.`:'If the word starts with a stressed prefix, tap the last letter of the prefix. Its end then counts as a root boundary.'));
+  const pre=el('div','pre');
+  a0.units.forEach((u,i)=>{const b=el('button','ltr'+(i<bnd?' on':''),u.s);b.type='button';b.lang='yi';b.onclick=()=>{st.boundary=st.boundary===i+1?null:i+1;st.stress=null;render()};pre.append(b)});
+  out.append(pre)}
+ // 1. syllables
+ out.append(el('p','mut',a.nuclei.length>1?`Syllables: tap the stressed one. ${st.stress!=null&&st.stress<a.nuclei.length?'Stress set by you.':'Stress guessed by the app.'}`:'One syllable.'));
+ const chips=el('div','chips');
+ a.syllables.forEach((sylb,i)=>{const b=el('button','chip'+(i===stress?' on':''),sylb);b.type='button';b.lang='yi';b.onclick=()=>{st.stress=i;render()};chips.append(b)});
+ out.append(chips);
+ // 2. every determination
+ const ev=RuleFinder.evaluate(a,stress,{germanic:src==='germanic',slavic:src==='slavic'}),by={};
+ for(const e of ev.list)by[norm(e.name)]=e;
+ const steps=seq.map(rule=>{const k=norm(rule.b),auto=by[k];
+  if(k==='english')return {rule,kind:'auto',match:src==='english',why:src==='english'?'the source is English':'the source is not English'};
+  if(auto)return {rule,kind:'auto',match:auto.match,why:auto.why};
+  return {rule,kind:'manual',key:k,match:!!st.manual[k]}});
+ const win=steps.findIndex(s=>s.match),W=win>=0?steps[win]:null;
+ out.append(el('div','ctx','What the app sees: '+ev.ctx.text));
+ // 3. result
+ const res=el('div','card res');
+ if(W){
+  res.append(el('div','lab','The rule that applies is'));res.append(el('div','name',W.rule.b));
+  const o=el('div','out');setText(o,W.rule.d||W.rule.c,W.rule.b);o.dir='auto';res.append(o);
+  const b=el('button','btn','Show the full rule');b.type='button';b.onclick=()=>showRule(W.rule);res.append(b);
+  if(/^derived$/i.test(W.rule.b))res.append(el('p','mut','Derived: next, analyze the root word instead.'));
+ }else{res.append(el('div','name','No rule applies'));res.append(el('p','mut','In the Database this would be "n/a" (no rule governs the word).'))}
+ out.append(res);
+ // 4. comparison with the Database
+ const key=strip(word),hits=rows.filter(r=>strip(r.word)===key);
+ if(hits.length){
+  out.append(el('h2',null,'Compare with the Database'));
+  for(const r of hits){
+   const c=el('div','card'),sound=r.sounds&&r.sounds[0]?r.sounds.map(x=>x[0]+' - '+x[1]).join('; '):'none recorded';
+   c.append(el('div',null,`Database: rule “${r.rule||'none'}”; ${sound}; follows rule: ${r.follows||'—'}`));
+   const sameRule=W?norm(W.rule.b)===norm(r.rule):norm(r.rule)==='na';
+   const dbLen=lenOf(r.sounds&&r.sounds[0]&&r.sounds[0][0]),appLen=W?lenOf(W.rule.d):'';
+   const l1=el('div');l1.append('Rule: ');l1.append(el('span',sameRule?'ok':'bad',sameRule?'same as the app':`different (app: ${W?W.rule.b:'no rule'})`));
+   c.append(l1);
+   if(appLen&&dbLen){const l2=el('div');l2.append('Vowel length: ');l2.append(el('span',appLen===dbLen?'ok':'bad',appLen===dbLen?`same (${dbLen})`:`different (app: ${appLen}, Database: ${dbLen})`));c.append(l2)}
+   out.append(c)}
+ }
+ // 5. the walk through the rules
+ out.append(el('h2',null,'Every question and the app’s answer'));
+ out.append(el('p','mut','Rules are checked in the order of the Rules tab; the first Yes applies. Rules the app cannot judge from spelling are assumed No until you mark them.'));
+ steps.forEach((s,i)=>{
+  const row=el('div','step'+(i===win?' win':win>=0&&i>win?' after':'')),head=el('div');
+  if(s.kind==='manual'){
+   const tg=el('span','tg');
+   for(const [label,val] of [['No',false],['Yes',true]]){const b=el('button',s.match===val?'on':'',label);b.type='button';b.onclick=()=>{st.manual[s.key]=val;render()};tg.append(b)}
+   head.append(tg)}
+  else head.append(el('span','pill '+(s.match?'p-yes':'p-no'),s.match?'Yes':'No'));
+  head.append(el('span','sn',s.rule.b));
+  head.append(el('span','tag',s.kind==='manual'?'you decide':'automatic'+(win>=0&&i>win&&s.match?' · also matches, not used':'')));
+  row.append(head);
+  row.append(el('div','why',s.kind==='manual'?(s.match?'You marked Yes.':'Cannot be judged from spelling; assumed No.'):s.why));
+  out.append(row)});
+}
+// A new word (or switching verb/root) clears the stress, prefix and every manual Yes/No.
+const reset=()=>{st.stress=null;st.boundary=null;st.manual={}};
+$('w').addEventListener('input',()=>{reset();render()});
+$('src').addEventListener('change',()=>{st.stress=null;render()});
+$('verb').addEventListener('change',()=>{reset();render()});
+$('syl').addEventListener('change',()=>{st.stress=null;st.boundary=null;render()});
+YT.attach($('w'),$('yt'));
+
+async function loadData(){
+ // 1. saved copies (instant, works offline)
+ try{const c=await idbGet('rules-v1');if(c&&c.rules){rules=c.rules;rhead=c.head||rhead}}catch(e){}
+ try{const d=await idbGet('vowel-lookup-v1');if(d&&d.rows)rows=d.rows}catch(e){}
+ if(rules.length||rows.length)render();
+ setStatus(rules.length?'Updating rules…':'Loading rules…');
+ // 2. fresh copies from the Google Sheet
+ let rOk=false,dOk=false;
+ try{
+  const res=await fetch(RULES_URL);if(!res.ok)throw new Error(res.status);
+  const text=await res.text();if(text.trim().startsWith('<'))throw new Error('Sheet is not public');
+  const b=buildRules(text);rules=b.rules;rhead=b.head;rOk=true;
+  try{await idbSet('rules-v1',{at:Date.now(),head:rhead,rules})}catch(e){}
+ }catch(e){}
+ render();
+ try{
+  const res=await fetch(CSV_URL);if(!res.ok)throw new Error(res.status);
+  const text=await res.text();if(text.trim().startsWith('<'))throw new Error('Sheet is not public');
+  rows=buildRows(text);dOk=true;
+  try{await idbSet('vowel-lookup-v1',{at:Date.now(),rows})}catch(e){}
+ }catch(e){}
+ setStatus(rOk&&dOk?`${rules.length} rules and ${rows.length} Database entries · up to date`:
+  rules.length?`Offline or sheet unavailable · using saved data (${rules.length} rules, ${rows.length} Database entries)`:
+  'Could not load the rules. Check your connection and that the sheet is shared as “Anyone with the link can view”.');
+ render()}
+loadData();
+render();
+</script>
+</body>
+</html>
