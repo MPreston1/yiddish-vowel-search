@@ -643,13 +643,31 @@
                         len = outcome.toLowerCase()
                     } else outcome = `Short or Long, depending on the use: ${via}`
                 } else why = 'not one of the forms the guide lists for the key verbs (only the exact listed forms are checked, so forms with a prefix are not)';
-                return {rule, kind: 'manual', key: k, guessed: true, why, outcome, len, match: asked ? st.manual[k] : !!vm}
+                return {
+                    rule,
+                    kind: 'manual',
+                    key: k,
+                    guessed: true,
+                    why,
+                    outcome,
+                    len,
+                    match: asked ? st.manual[k] : !!vm
+                }
             }
             if (rule.srule && rule.srule.title === 'Irregular comparative stems') {
                 // the app tries first, from the examples in the guide; you can still change the answer
                 const cm = Rules.matchComparative(srules, word), asked = st.manual[k] !== undefined;
-                const why = cm ? `the word ${cm.how}` : 'not one of the comparatives the guide lists (שענער, קלענער, בעסער, גרעסער), or their endings and superlatives';
-                return {rule, kind: 'manual', key: k, guessed: true, why, outcome: cm ? 'Short' : null, len: cm ? 'short' : '', match: asked ? st.manual[k] : !!cm}
+                const why = cm ? `the word ${cm.how}` : 'not one of the comparatives the guide lists (שענער, קלענער, בעסער, גרעסער)';
+                return {
+                    rule,
+                    kind: 'manual',
+                    key: k,
+                    guessed: true,
+                    why,
+                    outcome: cm ? 'Short' : null,
+                    len: cm ? 'short' : '',
+                    match: asked ? st.manual[k] : !!cm
+                }
             }
             return {rule, kind: 'manual', key: k, match: !!st.manual[k]}
         });
@@ -683,7 +701,8 @@
                     sound = r.sounds && r.sounds[0] ? r.sounds.map(x => x[0] + ' - ' + x[1]).join('; ') : 'none recorded';
                 c.append(el('div', null, `Database: rule “${r.rule || 'none'}”; ${sound}; follows rule: ${r.follows || '—'}`));
                 const same = W ? sameRule(W.rule, r.rule) : norm(r.rule) === 'na';
-                const dbLen = lenOf(r.sounds && r.sounds[0] && r.sounds[0][0]), appLen = W ? (W.len !== undefined ? W.len : lenOf(W.rule.d)) : '';
+                const dbLen = lenOf(r.sounds && r.sounds[0] && r.sounds[0][0]),
+                    appLen = W ? (W.len !== undefined ? W.len : lenOf(W.rule.d)) : '';
                 const l1 = el('div');
                 l1.append('Rule: ');
                 l1.append(el('span', same ? 'ok' : 'bad', same ? 'same as the app' : `different (app: ${W ? W.rule.b : 'no rule'})`));
