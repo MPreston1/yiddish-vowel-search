@@ -1,5 +1,6 @@
 :root {
-    --modeh: 56px
+    --modeh: 56px;
+    --bad: #a12a2a
 }
 
 html[data-mode=l] {
@@ -33,6 +34,10 @@ html[data-mode=o] {
 }
 
 @media (prefers-color-scheme: dark) {
+    :root {
+        --bad: #f09a9a
+    }
+
     html[data-mode=l] {
         --bg: #10151b;
         --card: #192029;
@@ -729,4 +734,232 @@ button.wbtn {
 
 .rt .sp:last-child {
     margin: 0
+}
+/* ---- Semi-automated rule finder (inside "Help me find the rule", vowel length only) ---- */
+.wcol {
+    display: flex;
+    flex-direction: column;
+    gap: 10px
+}
+
+.app-l .wcol .wbtn {
+    flex: none;
+    text-align: start
+}
+
+.af .opts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    margin: 10px 0;
+    align-items: center
+}
+
+.af label {
+    display: flex;
+    gap: 6px;
+    align-items: center
+}
+
+.af select {
+    font: inherit;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--ink)
+}
+
+.af input[type=checkbox] {
+    width: auto;
+    padding: 0;
+    margin: 0
+}
+
+.af h2 {
+    font-size: 15px;
+    margin: 18px 0 8px
+}
+
+.afpre {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    direction: rtl;
+    margin: 6px 0 4px
+}
+
+.af .wl {
+    font: 600 34px/1.7 "Frank Ruhl Libre", "David", "Times New Roman", serif;
+    margin: 6px 0 12px
+}
+
+.af .wl .c {
+    padding: 0 1px
+}
+
+.af .wl button.v {
+    font: inherit;
+    padding: 0 6px;
+    margin: 0 2px;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--ink)
+}
+
+.af .wl button.v.on, .af .ltr.on {
+    background: var(--acc);
+    border-color: var(--acc);
+    color: var(--card)
+}
+
+.af .ltr {
+    font: 600 22px/1.2 "Frank Ruhl Libre", "David", "Times New Roman", serif;
+    padding: 3px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--ink)
+}
+
+.af .ltr.on {
+    background: var(--warnbg);
+    border-color: var(--warn);
+    color: var(--warn)
+}
+
+.af .res .name {
+    font-weight: 700;
+    font-size: 17px
+}
+
+.af .res .out {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 2px 0 8px;
+    white-space: pre-line
+}
+
+.af .lab {
+    color: var(--mut);
+    font-size: 13px
+}
+
+.af .btn {
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--acc);
+    background: var(--card);
+    color: var(--acc)
+}
+
+.af .step {
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 10px;
+    padding: 9px 12px;
+    margin: 0 0 8px
+}
+
+.af .step.win {
+    border: 2px solid var(--ok)
+}
+
+.af .step.after {
+    opacity: .6
+}
+
+.af .pill {
+    display: inline-block;
+    min-width: 42px;
+    text-align: center;
+    border-radius: 99px;
+    padding: 1px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-right: 8px
+}
+
+.af .p-yes {
+    background: var(--okbg);
+    color: var(--ok)
+}
+
+.af .p-no {
+    background: var(--nabg);
+    color: var(--na)
+}
+
+.af button.sn {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-weight: 600;
+    color: var(--acc);
+    text-decoration: underline;
+    text-align: start;
+    overflow-wrap: anywhere
+}
+
+.af .tag {
+    font-size: 12px;
+    color: var(--mut);
+    margin-left: 6px
+}
+
+.af .why {
+    color: var(--mut);
+    font-size: 14px;
+    margin-top: 3px
+}
+
+.af .tg {
+    display: inline-flex;
+    margin-right: 8px;
+    vertical-align: middle
+}
+
+.af .tg button {
+    padding: 1px 12px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    font-size: 13px
+}
+
+.af .tg button:first-child {
+    border-radius: 99px 0 0 99px
+}
+
+.af .tg button:last-child {
+    border-radius: 0 99px 99px 0
+}
+
+.af .tg button.on {
+    background: var(--acc);
+    color: var(--card);
+    border-color: var(--acc)
+}
+
+.af .ok {
+    color: var(--ok);
+    font-weight: 700
+}
+
+.af .bad {
+    color: var(--bad);
+    font-weight: 700
+}
+
+.af .dbw {
+    font-weight: 700;
+    margin: 0 0 4px
+}
+
+.af .dbword {
+    font: 600 20px "Frank Ruhl Libre", "David", "Times New Roman", serif
 }
