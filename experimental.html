@@ -717,11 +717,19 @@
             }
             return {rule, kind: 'manual', key: k, match: !!st.manual[k]}
         });
-        const win = steps.findIndex(s => s.match), W = win >= 0 ? steps[win] : null;
+        // Vowel length only exists for אָ, ע, ו / וּ and י / יִ. Any other stressed vowel has just one length, so no rule is looked for.
+        const oneLength = !['o', 'e', 'u', 'i'].includes(a.units[a.nuclei[stress]].v);
+        const win = oneLength ? -1 : steps.findIndex(s => s.match), W = win >= 0 ? steps[win] : null;
         out.append(el('div', 'ctx', 'What the app sees: ' + ev.ctx.text));
         // 3. result
         const res = el('div', 'card res');
-        if (W) {
+        if (oneLength) {
+            const sv = a.units[a.nuclei[stress]].s;
+            res.append(el('div', 'name', 'Only one length'));
+            const t = el('p', 'mut', `The stressed vowel (${sv}) has only one length. Only אָ, ע, ו / וּ and י / יִ come in short and long, so there is no vowel-length rule to find. In the Database this would be \"n/a\".`);
+            t.lang = 'en';
+            res.append(t)
+        } else if (W) {
             res.append(el('div', 'lab', 'The rule that applies is'));
             res.append(el('div', 'name', W.rule.b));
             const o = el('div', 'out');
@@ -772,6 +780,7 @@
                 out.append(c)
             }
         }
+        if (oneLength) return;
         // 5. the walk through the rules
         out.append(el('h2', null, 'Every question and the app’s answer'));
         out.append(el('p', 'mut', 'Rules are checked in the order of the Rules tab; the first Yes applies. Rules the app cannot judge from spelling are assumed No until you mark them.'));
