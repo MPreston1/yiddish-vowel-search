@@ -735,6 +735,7 @@ button.wbtn {
 .rt .sp:last-child {
     margin: 0
 }
+
 /* ---- Semi-automated rule finder (inside "Help me find the rule", vowel length only) ---- */
 .wcol {
     display: flex;
@@ -770,10 +771,28 @@ button.wbtn {
     color: var(--ink)
 }
 
-.af input[type=checkbox] {
-    width: auto;
-    padding: 0;
-    margin: 0
+/* two toggles under the rule list note */
+.af .views {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 10px
+}
+
+.af .views button {
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--acc);
+    background: var(--card);
+    color: var(--acc)
+}
+
+.af .views button.on {
+    background: var(--acc);
+    color: var(--card)
 }
 
 .af h2 {
@@ -962,4 +981,8 @@ button.wbtn {
 
 .af .dbword {
     font: 600 20px "Frank Ruhl Libre", "David", "Times New Roman", serif
+}
+
+.af label.pq {
+    margin: 6px 0
 }
