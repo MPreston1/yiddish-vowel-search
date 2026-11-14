@@ -122,11 +122,7 @@ const Rules = (function () {
 
     function xfrm(el) {
         const o = first(el, NS_A, 'off'), e = first(el, NS_A, 'ext');
-        return o ? {x: +o.getAttribute('x'), y: +o.getAttribute('y'), w: e ? +e.getAttribute('cx') : 0} : {
-            x: 0,
-            y: 0,
-            w: 0
-        }
+        return o ? {x: +o.getAttribute('x'), y: +o.getAttribute('y'), w: e ? +e.getAttribute('cx') : 0} : {x: 0, y: 0, w: 0}
     }
 
     // Opens a .pptx; slideXml(n) gives the XML of slide n (1-based).
@@ -276,6 +272,40 @@ const Rules = (function () {
         return out
     }
 
+    // The verb forms listed in the Select verbs rule: under each verb, "Short: ..." and "Long: ..." give example forms,
+    // sometimes with pronouns ("ער/זי איז" -> איז). Returns [{verb, len:'Short'|'Long', form, key, item}].
+    const PRONOUNS = ['איך', 'דו', 'ער', 'זי', 'עס', 'מיר', 'איר', 'זײ', 'אונדז', 'דאָס', 'דער', 'די'].map(norm);
+
+    function verbForms(srules) {
+        const sr = (srules || []).find(r => r.title === 'Select verbs'), out = [];
+        if (!sr) return out;
+        for (const part of sr.parts) {
+            const verb = part.paras[0] ? plain([part.paras[0]]) : '';
+            for (const p of part.paras) {
+                const m = /^(Short|Long):\s*([\s\S]*)$/.exec(p.r.map(x => x.t).join(''));
+                if (!m) continue;
+                for (const item of m[2].replace(/[….]+\s*$/, '').split(/[,;]/)) {
+                    const it = item.trim();
+                    if (!it) continue;
+                    for (const alt of it.split(/\s+/).pop().split('/')) for (const piece of alt.split(/[׳'’]/)) {
+                        const key = norm(piece);
+                        if (key && !PRONOUNS.includes(key)) out.push({verb, len: m[1], form: piece, key, item: it})
+                    }
+                }
+            }
+        }
+        return out
+    }
+
+    // Does the word match a form listed in Select verbs? Returns {verb, lens, hits} or null.
+    // A bare form can be both (האָבן is short as מיר האָבן but long as דאָס האָבן).
+    function matchVerbForm(srules, word) {
+        const k = norm(word);
+        if (!k) return null;
+        const hits = verbForms(srules).filter(f => f.key === k);
+        return hits.length ? {verb: hits[0].verb, lens: [...new Set(hits.map(h => h.len))], hits} : null
+    }
+
     // Rules in the order they are asked. branch 'lk' = loshn-koydesh words, anything else = the rest.
     // For the rest, the slide rules come right after Place names. Returns null if the Rules tab lacks the expected sections.
     function sequence(rules, branch, srules) {
@@ -402,28 +432,9 @@ const Rules = (function () {
     }
 
     return {
-        SHEET_ID,
-        CSV_URL,
-        RULES_URL,
-        PPTX_URL,
-        PLACE_URL,
-        norm,
-        loose,
-        buildRows,
-        buildRules,
-        fetchRulesTab,
-        fetchDatabase,
+        SHEET_ID, CSV_URL, RULES_URL, PPTX_URL, PLACE_URL, norm, loose, buildRows, buildRules, fetchRulesTab, fetchDatabase,
         xml: {NS_A, NS_P, NS_R, kids, first, parasOf, joinParas, textOf, xfrm},
-        SLIDE_RULES,
-        openPptx,
-        parseSlideRules,
-        loadSlideRules,
-        findSlideRule,
-        sequence,
-        fill,
-        setText,
-        modal,
-        showRule,
-        showSlideRule
+        SLIDE_RULES, openPptx, parseSlideRules, loadSlideRules, findSlideRule, sequence, verbForms, matchVerbForm,
+        fill, setText, modal, showRule, showSlideRule
     }
 })();
