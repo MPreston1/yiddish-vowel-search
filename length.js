@@ -9,6 +9,11 @@
 
     const {norm} = Rules, build = Rules.buildRows;   // Database parsing lives in rules.js, shared with experimental.html
 
+    // After data finishes loading: redraw whatever is on screen without throwing the user out of the rule finder.
+    function refresh() {
+        if (!wzOn) search(); else if (wz.cur.t === 'auto') renderAuto()
+    }
+
     function setStatus(msg) {
         $('count').textContent = msg
     }
@@ -21,7 +26,7 @@
                     rows = c.rows;
                     sheetAt = c.at;
                     setStatus(`${rows.length} entries (saved ${new Date(c.at).toLocaleDateString()})`);
-                    search()
+                    refresh()
                 }
             } catch (e) {
             }
@@ -39,13 +44,14 @@
             } catch (e) {
             }
             setStatus(`${rows.length} entries · up to date`);
-            search();
+            refresh();
         } catch (e) {
             setStatus(rows.length ? `Offline — using saved data (${rows.length} entries)` : 'Could not load the spreadsheet. Check that it is shared as “Anyone with the link can view”.');
         }
     }
 
     function search() {
+        wzOn = false;
         const raw = $('q').value.trim(), q = norm(raw);
         if (!q) {
             matches = [];
@@ -338,7 +344,7 @@
         if (slideErr) {
             for (const P of [T, N]) P.append(el('p', 'msg', `Showing saved copy (${slideErr}).`))
         }
-        if ($('q').value.trim()) search()
+        if (wzOn || $('q').value.trim()) refresh()
     }
 
     function view(v) {
@@ -405,7 +411,7 @@
             }
         } catch (e) {
         }
-        if ($('q').value.trim()) search();
+        if (wzOn || $('q').value.trim()) refresh();
     }
 
     const setText = Rules.setText;
@@ -446,12 +452,31 @@
         return {t: 'none', notes}
     }
 
-    let wz = null;
+    let wz = null, wzOn = false;
 
+    // Opens the rule finder for the word in the search box. The first screen asks: manual questions or semi-automated finder.
     function startWizard(word) {
         $('more').hidden = true;
-        wz = {word, hist: [], germanic: null, cur: {t: 'q0'}};
+        wzOn = true;
+        wz = {
+            word, hist: [], germanic: null, cur: {t: 'choose'},
+            auto: {src: 'germanic', verb: false, stress: null, boundary: null, manual: {}}
+        };
         renderWizard()
+    }
+
+    // The rule finder needs a word: ask for one instead of starting.
+    function needWord() {
+        wzOn = false;
+        matches = [];
+        shown = 0;
+        $('more').hidden = true;
+        const R = $('results'), box = el('div', 'wiz');
+        R.innerHTML = '';
+        box.append(el('p', 'wq', 'Type a word in the search box first.'));
+        box.append(el('p', 'wmut', 'The rule finder works on a word. Type a Yiddish word above, then tap “Help me find the rule” again.'));
+        R.append(box);
+        $('q').focus()
     }
 
     function wizGo(next) {
@@ -479,6 +504,7 @@
 
     function renderWizard() {
         const R = $('results'), s = wz.cur, notes = s.notes || [];
+        if (s.t === 'auto') return renderAuto();
         R.innerHTML = '';
         const box = el('div', 'wiz');
         if (wz.word) {
@@ -497,7 +523,22 @@
             }
             box.append(row)
         };
-        if (s.t === 'q0') {
+        if (s.t === 'choose') {
+            box.append(el('p', 'wq', 'How do you want to find the rule?'));
+            const col = el('div', 'wcol');
+            for (const [label, f] of [
+                ['Apply the rules manually', () => wizGo({t: 'q0'})],
+                ['Use the semi-automated rule finder (only for words not from loshn-koydesh)', () => {
+                    wizGo({t: 'auto'});
+                    window.scrollTo(0, 0)
+                }]]) {
+                const b = el('button', 'wbtn', label);
+                b.type = 'button';
+                b.onclick = f;
+                col.append(b)
+            }
+            box.append(col)
+        } else if (s.t === 'q0') {
             box.append(el('p', 'wq', 'Is this a loshn-koydesh word?'));
             yn(() => wizGo(wizNext('lk', 0, [])), () => wizGo(wizNext('non', 0, [])))
         } else if (s.t === 'gate') {
@@ -555,6 +596,266 @@
         box.append(nav);
         R.append(box);
         window.scrollTo(0, 0)
+    }
+
+// ---- Semi-automated rule finder (only for words that are not loshn-koydesh); the engine is in rulefinder.js ----
+// Guesses the stressed syllable, answers every question it can from the spelling, and shows each answer.
+    const afNorm = s => (s || '').replace(/\s+/g, ' ').replace(/\//g, '').trim().toLowerCase();
+    const afKey = s => (s || '').normalize('NFD').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, '');
+    const afSame = (rule, dbName) => afNorm(rule.b) === afNorm(dbName) || !!(rule.names && rule.names.some(n => Rules.loose(n) === Rules.loose(dbName)));
+    const afLen = s => {
+        const m = /^(short|long)/i.exec(s || '');
+        return m ? m[1].toLowerCase() : ''
+    };
+    const afShow = r => r.srule ? showSlideRule(r.srule) : showRule(r);
+
+    function renderAuto() {
+        const R = $('results'), st = wz.auto, word = wz.word;
+        R.innerHTML = '';
+        const out = el('div', 'af');
+        R.append(out);
+        const sw = el('p', 'wmut', 'Searching for: ' + word);
+        sw.dir = 'auto';
+        out.append(sw);
+        out.append(el('p', 'wmut', 'Only for words that are not from loshn-koydesh. The app answers every question it can from the spelling and shows each answer, so you can see where it goes wrong.'));
+        // options
+        const opts = el('div', 'opts'), l1 = el('label'), sel = el('select'), l2 = el('label'), cb = el('input');
+        for (const [v, t] of [['germanic', 'Germanic'], ['slavic', 'Slavic'], ['english', 'English'], ['other', 'Other / not sure']]) {
+            const o = el('option', null, t);
+            o.value = v;
+            sel.append(o)
+        }
+        sel.value = st.src;
+        sel.onchange = () => {
+            st.src = sel.value;
+            st.stress = null;
+            renderAuto()
+        };
+        l1.append('Source ', sel);
+        cb.type = 'checkbox';
+        cb.checked = st.verb;
+        cb.onchange = () => {
+            st.verb = cb.checked;
+            st.stress = null;
+            st.boundary = null;
+            st.manual = {};
+            renderAuto()
+        };
+        l2.append(cb, ' Verb (ignore the -ן / -ען ending)');
+        opts.append(l1, l2);
+        out.append(opts);
+        autoBody(out, st, word);
+        // navigation
+        const nav = el('div', 'wnav'), bk = el('button', null, 'Back');
+        bk.type = 'button';
+        bk.onclick = () => {
+            wz.cur = wz.hist.pop();
+            renderWizard()
+        };
+        const bs = el('button', null, 'Back to search');
+        bs.type = 'button';
+        bs.onclick = search;
+        nav.append(bk, bs);
+        out.append(nav)
+    }
+
+    function autoBody(out, st, word) {
+        const say = t => out.append(el('p', 'msg', t));
+        if (!rules.length) return say('The rules are not loaded yet. Open the app online once so they can be saved.');
+        const seq = (() => {
+            const q = Rules.sequence(rules, 'non', slide && slide.srules);
+            return q && q.filter(x => !x.note)
+        })();
+        if (!seq) return say('The Rules tab does not have the expected sections.');
+        const srules = (slide && slide.srules) || [], src = st.src;
+        let w = word, rootNote = '';
+        if (st.verb) {
+            const r1 = w.replace(/ען$/, ''),
+                r = (r1 !== w && RuleFinder.analyze(r1, 0, {syllabic: false}).nuclei.length) ? r1 : w.replace(/ן$/, '');
+            if (r !== w) {
+                w = r;
+                rootNote = `Analyzing the root: ${w}`
+            }
+        }
+        const a0 = RuleFinder.analyze(w);
+        if (!a0.nuclei.length) return say('No vowels were found in this word.');
+        const bnd = st.boundary > 0 && st.boundary < a0.units.length ? st.boundary : 0,
+            a = bnd ? RuleFinder.analyze(w, bnd) : a0;
+        const guess = RuleFinder.guessStress(a, {germanic: src === 'germanic'}),
+            stress0 = st.stress != null && st.stress < a.nuclei.length ? st.stress : guess;
+        // a syllabic ל/ן counts as a syllable for the guess, but it is a consonant, so stress never lands on it
+        let stress = stress0;
+        while (stress > 0 && a.units[a.nuclei[stress]].syl) stress--;
+        const nVowels = a.units.filter(u => u.t === 'V' && !u.syl).length;
+        if (rootNote) out.append(el('p', 'wmut', rootNote));
+        if (a0.units.some(u => u.syl)) out.append(el('p', 'wmut', `Final ${w.slice(-1)} after a consonant is treated as a syllabic vowel.`));
+        // 0. stressed prefix: its end counts as a root boundary
+        if (a0.units.length > 1) {
+            out.append(el('p', 'wmut', bnd ? `Stressed prefix: ${a0.units.slice(0, bnd).map(u => u.s).join('')}. Its end counts as a root boundary. Tap its last letter again to clear.` : 'If the word starts with a stressed prefix, tap the last letter of the prefix. Its end then counts as a root boundary.'));
+            const pre = el('div', 'afpre');
+            a0.units.forEach((u, i) => {
+                const b = el('button', 'ltr' + (i < bnd ? ' on' : ''), u.s);
+                b.type = 'button';
+                b.lang = 'yi';
+                b.onclick = () => {
+                    st.boundary = st.boundary === i + 1 ? null : i + 1;
+                    st.stress = null;
+                    renderAuto()
+                };
+                pre.append(b)
+            });
+            out.append(pre)
+        }
+        // 1. syllables
+        out.append(el('p', 'wmut', nVowels > 1 ? `Tap the stressed vowel. ${st.stress != null && st.stress < a.nuclei.length ? 'Stress set by you.' : 'Stress guessed by the app (Germanic: first vowel of the root; other sources: second to last).'}` : 'One vowel.'));
+        const wl = el('div', 'wl');
+        wl.dir = 'rtl';
+        let vi = 0;
+        a.units.forEach(u => {
+            if (u.t === 'V' && !u.syl) {
+                const i = vi++, b = el('button', 'v' + (i === stress ? ' on' : ''), u.s);
+                b.type = 'button';
+                b.lang = 'yi';
+                b.onclick = () => {
+                    st.stress = i;
+                    renderAuto()
+                };
+                wl.append(b)
+            } else {
+                if (u.t === 'V') vi++;   // syllabic ל/ן: shown as a plain consonant, but still counted
+                const c = el('span', 'c', u.s);
+                c.lang = 'yi';
+                wl.append(c)
+            }
+        });
+        out.append(wl);
+        // 2. every determination
+        const ev = RuleFinder.evaluate(a, stress, {germanic: src === 'germanic', slavic: src === 'slavic'}), by = {};
+        for (const e of ev.list) by[afNorm(e.name)] = e;
+        const steps = seq.map(rule => {
+            const k = afNorm(rule.b), auto = by[k];
+            if (k === 'english') return {
+                rule,
+                kind: 'auto',
+                match: src === 'english',
+                why: src === 'english' ? 'the source is English' : 'the source is not English'
+            };
+            if (auto) return {rule, kind: 'auto', match: auto.match, why: auto.why};
+            if (rule.srule && rule.srule.title === 'Select verbs') {
+                // the app tries first: is the word one of the forms listed in the guide? You can still change the answer.
+                const vm = Rules.matchVerbForm(srules, word), asked = st.manual[k] !== undefined;
+                let outcome = null, len = '', why;
+                if (vm) {
+                    const via = vm.hits.map(h => `${h.len.toLowerCase()} in “${h.item}”`).join('; ');
+                    why = `matches a form of ${vm.verb} listed in the guide: ${via}`;
+                    if (vm.lens.length === 1) {
+                        outcome = vm.lens[0];
+                        len = outcome.toLowerCase()
+                    } else outcome = `Short or Long, depending on the use: ${via}`
+                } else why = 'not one of the forms the guide lists for the key verbs (only the exact listed forms are checked, so forms with a prefix are not)';
+                return {rule, kind: 'manual', key: k, guessed: true, why, outcome, len, match: asked ? st.manual[k] : !!vm}
+            }
+            if (rule.srule && rule.srule.title === 'Short perfect stems') {
+                const pm = Rules.matchShortPerfect(srules, word), asked = st.manual[k] !== undefined;
+                const why = pm ? `the word ${pm.how}` : 'not one of the participles or derived nouns the guide lists (only those exact forms are checked)';
+                return {
+                    rule, kind: 'manual', key: k, guessed: true, why,
+                    outcome: pm ? 'Short' : null, len: pm ? 'short' : '', match: asked ? st.manual[k] : !!pm
+                }
+            }
+            if (rule.srule && rule.srule.title === 'Irregular comparative stems') {
+                const cm = Rules.matchComparative(srules, word), asked = st.manual[k] !== undefined;
+                const why = cm ? `the word ${cm.how}` : 'not one of the comparatives the guide lists (שענער, קלענער, בעסער, גרעסער)';
+                return {
+                    rule, kind: 'manual', key: k, guessed: true, why,
+                    outcome: cm ? 'Short' : null, len: cm ? 'short' : '', match: asked ? st.manual[k] : !!cm
+                }
+            }
+            return {rule, kind: 'manual', key: k, match: !!st.manual[k]}
+        });
+        // Vowel length only exists for אָ, ע, ו / וּ and י / יִ. Any other stressed vowel has just one length, so no rule is looked for.
+        const oneLength = !['o', 'e', 'u', 'i'].includes(a.units[a.nuclei[stress]].v);
+        const win = oneLength ? -1 : steps.findIndex(s => s.match), W = win >= 0 ? steps[win] : null;
+        out.append(el('div', 'wn', 'What the app sees: ' + ev.ctx.text));
+        // 3. result
+        const res = el('div', 'card res');
+        if (oneLength) {
+            const sv = a.units[a.nuclei[stress]].s;
+            res.append(el('div', 'name', 'Only one length'));
+            res.append(el('p', 'wmut', `The stressed vowel (${sv}) has only one length. Only אָ, ע, ו / וּ and י / יִ come in short and long, so there is no vowel-length rule to find. In the Database this would be "n/a".`))
+        } else if (W) {
+            res.append(el('div', 'lab', 'The rule that applies is'));
+            res.append(el('div', 'name', W.rule.b));
+            const o = el('div', 'out');
+            setText(o, W.outcome || W.rule.d || W.rule.c, W.rule.b);
+            o.dir = 'auto';
+            res.append(o);
+            const b = el('button', 'btn', 'Show the full rule');
+            b.type = 'button';
+            b.onclick = () => afShow(W.rule);
+            res.append(b);
+            if (/^derived$/i.test(W.rule.b)) res.append(el('p', 'wmut', 'Derived: next, analyze the root word instead.'))
+        } else {
+            res.append(el('div', 'name', 'No rule applies'));
+            res.append(el('p', 'wmut', 'In the Database this would be "n/a" (no rule governs the word).'))
+        }
+        out.append(res);
+        // 4. comparison with the Database: exact matches only (vowel points included; ligature spelling, hyphens and spaces ignored)
+        const key = afKey(word), hits = key ? rows.filter(r => afKey(r.word) === key) : [];
+        if (hits.length) {
+            out.append(el('h2', null, 'Compare with the Database'));
+            out.append(el('p', 'wmut', hits.length > 1 ? `${hits.length} Database entries match this word exactly. Check which one you mean.` : '1 Database entry matches this word exactly.'));
+            for (const r of hits) {
+                const c = el('div', 'card'),
+                    sound = r.sounds && r.sounds[0] ? r.sounds.map(x => x[0] + ' - ' + x[1]).join('; ') : 'none recorded';
+                const who = el('div', 'dbw'), dw = el('span', 'dbword', r.word);
+                dw.lang = 'yi';
+                who.append(dw, ` · ${r.pos ? (/^\(.*\)$/.test(r.pos) ? r.pos : '(' + r.pos + ')') + ' ' : ''}${r.gloss || 'no gloss'}`);
+                c.append(who);
+                c.append(el('div', null, `Database: rule “${r.rule || 'none'}”; ${sound}; follows rule: ${r.follows || '—'}`));
+                const same = W ? afSame(W.rule, r.rule) : afNorm(r.rule) === 'na';
+                const dbLen = afLen(r.sounds && r.sounds[0] && r.sounds[0][0]),
+                    appLen = W ? (W.len !== undefined ? W.len : afLen(W.rule.d)) : '';
+                const l1 = el('div');
+                l1.append('Rule: ', el('span', same ? 'ok' : 'bad', same ? 'same as the app' : `different (app: ${W ? W.rule.b : 'no rule'})`));
+                c.append(l1);
+                if (appLen && dbLen) {
+                    const l2 = el('div');
+                    l2.append('Vowel length: ', el('span', appLen === dbLen ? 'ok' : 'bad', appLen === dbLen ? `same (${dbLen})` : `different (app: ${appLen}, Database: ${dbLen})`));
+                    c.append(l2)
+                }
+                out.append(c)
+            }
+        }
+        if (oneLength) return;
+        // 5. the walk through the rules
+        out.append(el('h2', null, 'Every question and the app’s answer'));
+        out.append(el('p', 'wmut', 'Rules are checked in the order of the Rules tab; the first Yes applies. Rules the app cannot judge from spelling are assumed No until you mark them.'));
+        steps.forEach((s, i) => {
+            const row = el('div', 'step' + (i === win ? ' win' : win >= 0 && i > win ? ' after' : '')), head = el('div');
+            if (s.kind === 'manual') {
+                const tg = el('span', 'tg');
+                for (const [label, val] of [['No', false], ['Yes', true]]) {
+                    const b = el('button', s.match === val ? 'on' : '', label);
+                    b.type = 'button';
+                    b.onclick = () => {
+                        st.manual[s.key] = val;
+                        renderAuto()
+                    };
+                    tg.append(b)
+                }
+                head.append(tg)
+            } else head.append(el('span', 'pill ' + (s.match ? 'p-yes' : 'p-no'), s.match ? 'Yes' : 'No'));
+            const nb = el('button', 'sn', s.rule.b);
+            nb.type = 'button';
+            nb.title = 'Show the full rule';
+            nb.onclick = () => afShow(s.rule);
+            head.append(nb);
+            head.append(el('span', 'tag', s.guessed ? (st.manual[s.key] !== undefined ? 'you decided' : 'app guess · you can change') : s.kind === 'manual' ? 'you decide' : 'automatic' + (win >= 0 && i > win && s.match ? ' · also matches, not used' : '')));
+            row.append(head);
+            row.append(el('div', 'why', s.guessed ? s.why : s.kind === 'manual' ? (s.match ? 'You marked Yes.' : 'Cannot be judged from spelling; assumed No.') : s.why));
+            out.append(row)
+        })
     }
 
     YT.attach($('q'), $('yid-toggle'));
@@ -637,7 +938,8 @@
     $('q').addEventListener('input', search);
     $('helpbtn').addEventListener('click', () => {
         view('search');
-        startWizard($('q').value.trim())
+        const w = $('q').value.trim();
+        if (w) startWizard(w); else needWord()
     });
     $('more').addEventListener('click', more);
     $('refresh').addEventListener('click', () => {
