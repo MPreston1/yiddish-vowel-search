@@ -507,7 +507,6 @@
             <option value="other">Other / not sure</option>
         </select></label>
         <label><input type="checkbox" id="verb"> Verb (ignore the -ן / -ען ending)</label>
-        <label><input type="checkbox" id="syl" checked> Final ל / ן after a consonant is syllabic</label>
     </div>
     <div id="out"></div>
     <footer class="tools">
@@ -568,10 +567,10 @@
                 rootNote = `Analyzing the root: ${w}`
             }
         }
-        const so = {syllabic: $('syl').checked}, a0 = RuleFinder.analyze(w, 0, so);
+        const a0 = RuleFinder.analyze(w);
         if (!a0.nuclei.length) return say('No vowels were found in this word.');
         const bnd = st.boundary > 0 && st.boundary < a0.units.length ? st.boundary : 0,
-            a = bnd ? RuleFinder.analyze(w, bnd, so) : a0;
+            a = bnd ? RuleFinder.analyze(w, bnd) : a0;
         const guess = RuleFinder.guessStress(a, {germanic: src === 'germanic'}),
             stress0 = st.stress != null && st.stress < a.nuclei.length ? st.stress : guess;
         // a syllabic ל/ן counts as a syllable for the guess, but it is a consonant, so stress never lands on it
@@ -725,11 +724,6 @@
     });
     $('verb').addEventListener('change', () => {
         reset();
-        render()
-    });
-    $('syl').addEventListener('change', () => {
-        st.stress = null;
-        st.boundary = null;
         render()
     });
     YT.attach($('w'), $('yt'));
