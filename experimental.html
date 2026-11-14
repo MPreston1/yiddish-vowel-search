@@ -551,7 +551,7 @@
 <script>
     const $ = id => document.getElementById(id);
     const norm = s => (s || '').replace(/\s+/g, ' ').replace(/\//g, '').trim().toLowerCase();
-    const exactKey = s => (s || '').normalize('NFD').replace(/[\u0591-\u05BD\u05BF-\u05C7]/g, '').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').toLowerCase().replace(/\s+/g, ' ').trim();
+    const exactKey = s => (s || '').normalize('NFD').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, '');
     const strip = s => (s || '').normalize('NFD').replace(/[\u0591-\u05C7\u05BE\-\s()]/g, '').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').toLowerCase();
 
     function el(tag, cls, txt) {
@@ -739,8 +739,9 @@
         }
         out.append(res);
         // 4. comparison with the Database
-        // exact matches only: the whole Database word must equal the typed word (vowel points and ligature spelling are ignored,
-        // but parentheses, hyphens and spaces count). With "Verb" checked, the typed word, ending included, is what is compared.
+        // exact matches only: the whole Database word must equal the typed word, vowel points included (אַ is not אָ).
+        // Ignored: the spelling of the ligatures (װ = וו, ױ = וי, ײ = יי) and all punctuation and spaces (hyphens, parentheses, etc.).
+        // With "Verb" checked, the typed word, ending included, is what is compared.
         const key = exactKey(word), hits = key ? rows.filter(r => exactKey(r.word) === key) : [];
         if (hits.length) {
             out.append(el('h2', null, 'Compare with the Database'));
@@ -748,11 +749,11 @@
             for (const r of hits) {
                 const c = el('div', 'card'),
                     sound = r.sounds && r.sounds[0] ? r.sounds.map(x => x[0] + ' - ' + x[1]).join('; ') : 'none recorded';
-                // which entry is this? word, gloss and part of speech
+                // which entry is this? word, (part of speech) gloss; shown for every match, not only when there are several
                 const who = el('div', 'dbw');
                 who.append(el('span', 'dbword', r.word));
                 who.lastChild.lang = 'yi';
-                who.append(` · ${r.gloss || 'no gloss'}${r.pos ? ' · ' + r.pos : ''}`);
+                who.append(` · ${r.pos ? (/^\(.*\)$/.test(r.pos) ? r.pos : '(' + r.pos + ')') + ' ' : ''}${r.gloss || 'no gloss'}`);
                 c.append(who);
                 c.append(el('div', null, `Database: rule “${r.rule || 'none'}”; ${sound}; follows rule: ${r.follows || '—'}`));
                 const same = W ? sameRule(W.rule, r.rule) : norm(r.rule) === 'na';
