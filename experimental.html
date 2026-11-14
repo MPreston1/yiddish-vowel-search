@@ -631,6 +631,20 @@
                 why: src === 'english' ? 'the source is English' : 'the source is not English'
             };
             if (auto) return {rule, kind: 'auto', match: auto.match, why: auto.why};
+            if (rule.srule && rule.srule.title === 'Select verbs') {
+                // the app tries first: is the word one of the forms listed in the guide? You can still change the answer.
+                const vm = Rules.matchVerbForm(srules, word), asked = st.manual[k] !== undefined;
+                let outcome = null, len = '', why;
+                if (vm) {
+                    const via = vm.hits.map(h => `${h.len.toLowerCase()} in “${h.item}”`).join('; ');
+                    why = `matches a form of ${vm.verb} listed in the guide: ${via}`;
+                    if (vm.lens.length === 1) {
+                        outcome = vm.lens[0];
+                        len = outcome.toLowerCase()
+                    } else outcome = `Short or Long, depending on the use: ${via}`
+                } else why = 'not one of the forms the guide lists for the key verbs (only the exact listed forms are checked, so forms with a prefix are not)';
+                return {rule, kind: 'manual', key: k, guessed: true, why, outcome, len, match: asked ? st.manual[k] : !!vm}
+            }
             return {rule, kind: 'manual', key: k, match: !!st.manual[k]}
         });
         const win = steps.findIndex(s => s.match), W = win >= 0 ? steps[win] : null;
@@ -641,7 +655,7 @@
             res.append(el('div', 'lab', 'The rule that applies is'));
             res.append(el('div', 'name', W.rule.b));
             const o = el('div', 'out');
-            setText(o, W.rule.d || W.rule.c, W.rule.b);
+            setText(o, W.outcome || W.rule.d || W.rule.c, W.rule.b);
             o.dir = 'auto';
             res.append(o);
             const b = el('button', 'btn', 'Show the full rule');
@@ -663,7 +677,7 @@
                     sound = r.sounds && r.sounds[0] ? r.sounds.map(x => x[0] + ' - ' + x[1]).join('; ') : 'none recorded';
                 c.append(el('div', null, `Database: rule “${r.rule || 'none'}”; ${sound}; follows rule: ${r.follows || '—'}`));
                 const same = W ? sameRule(W.rule, r.rule) : norm(r.rule) === 'na';
-                const dbLen = lenOf(r.sounds && r.sounds[0] && r.sounds[0][0]), appLen = W ? lenOf(W.rule.d) : '';
+                const dbLen = lenOf(r.sounds && r.sounds[0] && r.sounds[0][0]), appLen = W ? (W.len !== undefined ? W.len : lenOf(W.rule.d)) : '';
                 const l1 = el('div');
                 l1.append('Rule: ');
                 l1.append(el('span', same ? 'ok' : 'bad', same ? 'same as the app' : `different (app: ${W ? W.rule.b : 'no rule'})`));
@@ -701,9 +715,9 @@
             nb.title = 'Show the full rule';
             nb.onclick = () => showRule(s.rule);
             head.append(nb);
-            head.append(el('span', 'tag', s.kind === 'manual' ? 'you decide' : 'automatic' + (win >= 0 && i > win && s.match ? ' · also matches, not used' : '')));
+            head.append(el('span', 'tag', s.guessed ? (st.manual[s.key] !== undefined ? 'you decided' : 'app guess · you can change') : s.kind === 'manual' ? 'you decide' : 'automatic' + (win >= 0 && i > win && s.match ? ' · also matches, not used' : '')));
             row.append(head);
-            row.append(el('div', 'why', s.kind === 'manual' ? (s.match ? 'You marked Yes.' : 'Cannot be judged from spelling; assumed No.') : s.why));
+            row.append(el('div', 'why', s.guessed ? s.why : s.kind === 'manual' ? (s.match ? 'You marked Yes.' : 'Cannot be judged from spelling; assumed No.') : s.why));
             out.append(row)
         });
     }
