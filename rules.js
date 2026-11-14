@@ -122,7 +122,11 @@ const Rules = (function () {
 
     function xfrm(el) {
         const o = first(el, NS_A, 'off'), e = first(el, NS_A, 'ext');
-        return o ? {x: +o.getAttribute('x'), y: +o.getAttribute('y'), w: e ? +e.getAttribute('cx') : 0} : {x: 0, y: 0, w: 0}
+        return o ? {x: +o.getAttribute('x'), y: +o.getAttribute('y'), w: e ? +e.getAttribute('cx') : 0} : {
+            x: 0,
+            y: 0,
+            w: 0
+        }
     }
 
     // Opens a .pptx; slideXml(n) gives the XML of slide n (1-based).
@@ -306,6 +310,34 @@ const Rules = (function () {
         return hits.length ? {verb: hits[0].verb, lens: [...new Set(hits.map(h => h.len))], hits} : null
     }
 
+    // Irregular comparative stems: the Examples on the slide (שענער, קלענער, ...) are the comparatives. A word also counts if it is
+    // one of them with an adjective ending (-ע, -ן, -עם) or the matching superlative (stem + סט, with or without an ending).
+    // Returns {example, how} or null.
+    function matchComparative(srules, word) {
+        const sr = (srules || []).find(r => r.title === 'Irregular comparative stems'), k = norm(word);
+        if (!sr || !k) return null;
+        const part = sr.parts.find(p => /^examples?$/i.test(p.label)) || sr.parts[1];
+        if (!part) return null;
+        const exs = plain(part.paras).split(/[,;\n]/).map(x => x.trim()).filter(Boolean);
+        for (const ex of exs) {
+            const e = norm(ex);
+            if (!e) continue;
+            if (k === e) return {example: ex, how: 'is one of the comparatives listed in the guide'};
+            for (const end of ['ע', 'ן', 'עם']) if (k === e + end) return {
+                example: ex,
+                how: `is the listed comparative ${ex} with the ending ${end}-`
+            };
+            if (e.endsWith('ער')) {
+                const stem = e.slice(0, -2), sup = stem + (stem.endsWith('ס') ? 'ט' : 'סט');   // בעס- gives בעסט, שענ- gives שענסט
+                for (const end of ['', 'ע', 'ן', 'ער', 'עם']) if (k === sup + end) return {
+                    example: ex,
+                    how: `looks like the superlative of the listed comparative ${ex}`
+                }
+            }
+        }
+        return null
+    }
+
     // Rules in the order they are asked. branch 'lk' = loshn-koydesh words, anything else = the rest.
     // For the rest, the slide rules come right after Place names. Returns null if the Rules tab lacks the expected sections.
     function sequence(rules, branch, srules) {
@@ -432,9 +464,31 @@ const Rules = (function () {
     }
 
     return {
-        SHEET_ID, CSV_URL, RULES_URL, PPTX_URL, PLACE_URL, norm, loose, buildRows, buildRules, fetchRulesTab, fetchDatabase,
+        SHEET_ID,
+        CSV_URL,
+        RULES_URL,
+        PPTX_URL,
+        PLACE_URL,
+        norm,
+        loose,
+        buildRows,
+        buildRules,
+        fetchRulesTab,
+        fetchDatabase,
         xml: {NS_A, NS_P, NS_R, kids, first, parasOf, joinParas, textOf, xfrm},
-        SLIDE_RULES, openPptx, parseSlideRules, loadSlideRules, findSlideRule, sequence, verbForms, matchVerbForm,
-        fill, setText, modal, showRule, showSlideRule
+        SLIDE_RULES,
+        openPptx,
+        parseSlideRules,
+        loadSlideRules,
+        findSlideRule,
+        sequence,
+        verbForms,
+        matchVerbForm,
+        matchComparative,
+        fill,
+        setText,
+        modal,
+        showRule,
+        showSlideRule
     }
 })();
