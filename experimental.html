@@ -573,7 +573,11 @@
         const bnd = st.boundary > 0 && st.boundary < a0.units.length ? st.boundary : 0,
             a = bnd ? RuleFinder.analyze(w, bnd, so) : a0;
         const guess = RuleFinder.guessStress(a, {germanic: src === 'germanic'}),
-            stress = st.stress != null && st.stress < a.nuclei.length ? st.stress : guess;
+            stress0 = st.stress != null && st.stress < a.nuclei.length ? st.stress : guess;
+        // a syllabic ל/ן counts as a syllable for the guess, but it is a consonant, so stress never lands on it
+        let stress = stress0;
+        while (stress > 0 && a.units[a.nuclei[stress]].syl) stress--;
+        const nVowels = a.units.filter(u => u.t === 'V' && !u.syl).length;
         if (rootNote) out.append(el('p', 'mut', rootNote));
         if (a0.units.some(u => u.syl)) out.append(el('p', 'mut', `Final ${w.slice(-1)} after a consonant is treated as a syllabic vowel.`));
         // 0. stressed prefix: its end counts as a root boundary
@@ -594,12 +598,12 @@
             out.append(pre)
         }
         // 1. syllables
-        out.append(el('p', 'mut', a.nuclei.length > 1 ? `Tap the stressed vowel. ${st.stress != null && st.stress < a.nuclei.length ? 'Stress set by you.' : 'Stress guessed by the app (Germanic: first vowel of the root; other sources: second to last).'}` : 'One vowel.'));
+        out.append(el('p', 'mut', nVowels > 1 ? `Tap the stressed vowel. ${st.stress != null && st.stress < a.nuclei.length ? 'Stress set by you.' : 'Stress guessed by the app (Germanic: first vowel of the root; other sources: second to last).'}` : 'One vowel.'));
         const wl = el('div', 'wl');
         wl.dir = 'rtl';
         let vi = 0;
         a.units.forEach(u => {
-            if (u.t === 'V') {
+            if (u.t === 'V' && !u.syl) {
                 const i = vi++, b = el('button', 'v' + (i === stress ? ' on' : ''), u.s);
                 b.type = 'button';
                 b.lang = 'yi';
@@ -609,6 +613,7 @@
                 };
                 wl.append(b)
             } else {
+                if (u.t === 'V') vi++;   // syllabic ל/ן: shown as a plain consonant, but still counted
                 const c = el('span', 'c', u.s);
                 c.lang = 'yi';
                 wl.append(c)
