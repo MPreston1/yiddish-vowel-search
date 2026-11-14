@@ -129,10 +129,29 @@
         }
 
         .status {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
             color: var(--mut);
             font-size: 13px;
             margin: 8px 0 0;
             min-height: 18px
+        }
+
+        .refresh {
+            flex: none;
+            background: none;
+            border: 0;
+            color: var(--acc);
+            font: inherit;
+            font-size: 13px;
+            padding: 0;
+            cursor: pointer
+        }
+
+        .refresh:disabled {
+            opacity: .5;
+            cursor: default
         }
 
         .opts {
@@ -498,7 +517,9 @@
                 aria-label="Toggle Yiddish typing">A
         </button>
     </div>
-    <div class="status" id="status"></div>
+    <div class="status"><span id="status"></span>
+        <button type="button" id="refresh" class="refresh">Refresh data</button>
+    </div>
     <div class="opts">
         <label>Source <select id="src">
             <option value="germanic">Germanic</option>
@@ -643,46 +664,19 @@
                         len = outcome.toLowerCase()
                     } else outcome = `Short or Long, depending on the use: ${via}`
                 } else why = 'not one of the forms the guide lists for the key verbs (only the exact listed forms are checked, so forms with a prefix are not)';
-                return {
-                    rule,
-                    kind: 'manual',
-                    key: k,
-                    guessed: true,
-                    why,
-                    outcome,
-                    len,
-                    match: asked ? st.manual[k] : !!vm
-                }
+                return {rule, kind: 'manual', key: k, guessed: true, why, outcome, len, match: asked ? st.manual[k] : !!vm}
             }
             if (rule.srule && rule.srule.title === 'Short perfect stems') {
                 // the app tries first: is the word one of the participles or derived nouns listed in the guide? You can still change the answer.
                 const pm = Rules.matchShortPerfect(srules, word), asked = st.manual[k] !== undefined;
                 const why = pm ? `the word ${pm.how}` : 'not one of the participles or derived nouns the guide lists (only those exact forms are checked)';
-                return {
-                    rule,
-                    kind: 'manual',
-                    key: k,
-                    guessed: true,
-                    why,
-                    outcome: pm ? 'Short' : null,
-                    len: pm ? 'short' : '',
-                    match: asked ? st.manual[k] : !!pm
-                }
+                return {rule, kind: 'manual', key: k, guessed: true, why, outcome: pm ? 'Short' : null, len: pm ? 'short' : '', match: asked ? st.manual[k] : !!pm}
             }
             if (rule.srule && rule.srule.title === 'Irregular comparative stems') {
                 // the app tries first, from the examples in the guide; you can still change the answer
                 const cm = Rules.matchComparative(srules, word), asked = st.manual[k] !== undefined;
                 const why = cm ? `the word ${cm.how}` : 'not one of the comparatives the guide lists (שענער, קלענער, בעסער, גרעסער)';
-                return {
-                    rule,
-                    kind: 'manual',
-                    key: k,
-                    guessed: true,
-                    why,
-                    outcome: cm ? 'Short' : null,
-                    len: cm ? 'short' : '',
-                    match: asked ? st.manual[k] : !!cm
-                }
+                return {rule, kind: 'manual', key: k, guessed: true, why, outcome: cm ? 'Short' : null, len: cm ? 'short' : '', match: asked ? st.manual[k] : !!cm}
             }
             return {rule, kind: 'manual', key: k, match: !!st.manual[k]}
         });
@@ -716,8 +710,7 @@
                     sound = r.sounds && r.sounds[0] ? r.sounds.map(x => x[0] + ' - ' + x[1]).join('; ') : 'none recorded';
                 c.append(el('div', null, `Database: rule “${r.rule || 'none'}”; ${sound}; follows rule: ${r.follows || '—'}`));
                 const same = W ? sameRule(W.rule, r.rule) : norm(r.rule) === 'na';
-                const dbLen = lenOf(r.sounds && r.sounds[0] && r.sounds[0][0]),
-                    appLen = W ? (W.len !== undefined ? W.len : lenOf(W.rule.d)) : '';
+                const dbLen = lenOf(r.sounds && r.sounds[0] && r.sounds[0][0]), appLen = W ? (W.len !== undefined ? W.len : lenOf(W.rule.d)) : '';
                 const l1 = el('div');
                 l1.append('Rule: ');
                 l1.append(el('span', same ? 'ok' : 'bad', same ? 'same as the app' : `different (app: ${W ? W.rule.b : 'no rule'})`));
@@ -785,28 +778,44 @@
     // ---- saved data, loading, export and import ----
     const pickSlide = (a, b) => (a && a.length >= ((b && b.length) || 0)) ? a : (b || a || []);
 
-    async function loadData() {
-        // 1. saved copies (instant, work offline)
+    // Loads the saved copies (unless skipSaved), then fetches fresh ones from the sheet and the guide.
+    let loading = false;
+    async function loadData(skipSaved) {
+        if (loading) return;
+        loading = true;
+        $('refresh').disabled = true;
         try {
-            const c = await idbGet('rules-v1');
-            if (c && c.rules) {
-                rules = c.rules;
-                rhead = c.head || rhead
+            await loadDataNow(skipSaved)
+        } finally {
+            loading = false;
+            $('refresh').disabled = false
+        }
+    }
+
+    async function loadDataNow(skipSaved) {
+        if (!skipSaved) {
+            // 1. saved copies (instant, work offline)
+            try {
+                const c = await idbGet('rules-v1');
+                if (c && c.rules) {
+                    rules = c.rules;
+                    rhead = c.head || rhead
+                }
+            } catch (e) {
             }
-        } catch (e) {
-        }
-        try {
-            const d = await idbGet('vowel-lookup-v1');
-            if (d && d.rows) rows = d.rows
-        } catch (e) {
-        }
-        try {
-            const a = await idbGet('srules-v1'), m = await idbGet('slide-v3');
-            srules = pickSlide(a, m && m.srules)
-        } catch (e) {
+            try {
+                const d = await idbGet('vowel-lookup-v1');
+                if (d && d.rows) rows = d.rows
+            } catch (e) {
+            }
+            try {
+                const a = await idbGet('srules-v1'), m = await idbGet('slide-v3');
+                srules = pickSlide(a, m && m.srules)
+            } catch (e) {
+            }
         }
         if (rules.length || rows.length) render();
-        setStatus(rules.length ? 'Updating rules…' : 'Loading rules…');
+        setStatus(skipSaved ? 'Refreshing…' : rules.length ? 'Updating rules…' : 'Loading rules…');
         // 2. fresh copies; a failure leaves the saved (or imported) copy in place
         let rOk = false, dOk = false, sOk = false;
         try {
@@ -921,6 +930,7 @@
         e.target.value = '';
         if (f) importData(f)
     });
+    $('refresh').addEventListener('click', () => loadData(true));
     loadData();
     render();
 </script>
