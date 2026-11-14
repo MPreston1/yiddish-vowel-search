@@ -322,6 +322,25 @@ const Rules = (function () {
         return null
     }
 
+    // Short perfect stems: the Examples on the slide are written "participle/derived noun < infinitive"
+    // (געטראָטן/טראָט < טרעטן, ...). A word counts if it is one of the forms before the "<". Returns {form, infinitive, how} or null.
+    function matchShortPerfect(srules, word) {
+        const sr = (srules || []).find(r => r.title === 'Short perfect stems'), k = norm(word);
+        if (!sr || !k) return null;
+        const part = sr.parts.find(p => /^examples?$/i.test(p.label)) || sr.parts[1];
+        if (!part) return null;
+        for (const item of plain(part.paras).split(/[,;\n]/)) {
+            const [forms, inf] = item.split('<').map(x => x.trim());
+            if (!forms || !inf) continue;
+            for (const f of forms.split('/')) if (norm(f) === k) return {
+                form: f.trim(),
+                infinitive: inf,
+                how: `is one of the forms listed in the guide (from the infinitive ${inf})`
+            }
+        }
+        return null
+    }
+
     // Rules in the order they are asked. branch 'lk' = loshn-koydesh words, anything else = the rest.
     // For the rest, the slide rules come right after Place names. Returns null if the Rules tab lacks the expected sections.
     function sequence(rules, branch, srules) {
@@ -469,6 +488,7 @@ const Rules = (function () {
         verbForms,
         matchVerbForm,
         matchComparative,
+        matchShortPerfect,
         fill,
         setText,
         modal,
