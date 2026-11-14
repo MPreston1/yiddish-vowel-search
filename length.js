@@ -810,7 +810,9 @@
                     sound = r.sounds && r.sounds[0] ? r.sounds.map(x => x[0] + ' - ' + x[1]).join('; ') : 'none recorded';
                 const who = el('div', 'dbw'), dw = el('span', 'dbword', r.word);
                 dw.lang = 'yi';
-                who.append(dw, ` · ${r.pos ? (/^\(.*\)$/.test(r.pos) ? r.pos : '(' + r.pos + ')') + ' ' : ''}${r.gloss || 'no gloss'}`);
+                // part of speech, then the gloss; whichever is missing is simply left out
+                const desc = [r.pos ? (/^\(.*\)$/.test(r.pos) ? r.pos : '(' + r.pos + ')') : '', r.gloss || ''].filter(Boolean).join(' ');
+                who.append(dw, desc ? ` · ${desc}` : '');
                 c.append(who);
                 c.append(el('div', null, `Database: rule “${r.rule || 'none'}”; ${sound}; follows rule: ${r.follows || '—'}`));
                 const same = W ? afSame(W.rule, r.rule) : afNorm(r.rule) === 'na';
