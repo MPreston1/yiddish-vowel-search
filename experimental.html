@@ -487,6 +487,15 @@
             margin: 0
         }
 
+        .dbw {
+            font-weight: 700;
+            margin: 0 0 4px
+        }
+
+        .dbword {
+            font: 600 20px "Frank Ruhl Libre", "David", "Times New Roman", serif
+        }
+
         .tools {
             display: flex;
             gap: 20px;
@@ -542,6 +551,7 @@
 <script>
     const $ = id => document.getElementById(id);
     const norm = s => (s || '').replace(/\s+/g, ' ').replace(/\//g, '').trim().toLowerCase();
+    const exactKey = s => (s || '').normalize('NFD').replace(/[\u0591-\u05BD\u05BF-\u05C7]/g, '').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').toLowerCase().replace(/\s+/g, ' ').trim();
     const strip = s => (s || '').normalize('NFD').replace(/[\u0591-\u05C7\u05BE\-\s()]/g, '').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').toLowerCase();
 
     function el(tag, cls, txt) {
@@ -664,19 +674,46 @@
                         len = outcome.toLowerCase()
                     } else outcome = `Short or Long, depending on the use: ${via}`
                 } else why = 'not one of the forms the guide lists for the key verbs (only the exact listed forms are checked, so forms with a prefix are not)';
-                return {rule, kind: 'manual', key: k, guessed: true, why, outcome, len, match: asked ? st.manual[k] : !!vm}
+                return {
+                    rule,
+                    kind: 'manual',
+                    key: k,
+                    guessed: true,
+                    why,
+                    outcome,
+                    len,
+                    match: asked ? st.manual[k] : !!vm
+                }
             }
             if (rule.srule && rule.srule.title === 'Short perfect stems') {
                 // the app tries first: is the word one of the participles or derived nouns listed in the guide? You can still change the answer.
                 const pm = Rules.matchShortPerfect(srules, word), asked = st.manual[k] !== undefined;
                 const why = pm ? `the word ${pm.how}` : 'not one of the participles or derived nouns the guide lists (only those exact forms are checked)';
-                return {rule, kind: 'manual', key: k, guessed: true, why, outcome: pm ? 'Short' : null, len: pm ? 'short' : '', match: asked ? st.manual[k] : !!pm}
+                return {
+                    rule,
+                    kind: 'manual',
+                    key: k,
+                    guessed: true,
+                    why,
+                    outcome: pm ? 'Short' : null,
+                    len: pm ? 'short' : '',
+                    match: asked ? st.manual[k] : !!pm
+                }
             }
             if (rule.srule && rule.srule.title === 'Irregular comparative stems') {
                 // the app tries first, from the examples in the guide; you can still change the answer
                 const cm = Rules.matchComparative(srules, word), asked = st.manual[k] !== undefined;
                 const why = cm ? `the word ${cm.how}` : 'not one of the comparatives the guide lists (שענער, קלענער, בעסער, גרעסער)';
-                return {rule, kind: 'manual', key: k, guessed: true, why, outcome: cm ? 'Short' : null, len: cm ? 'short' : '', match: asked ? st.manual[k] : !!cm}
+                return {
+                    rule,
+                    kind: 'manual',
+                    key: k,
+                    guessed: true,
+                    why,
+                    outcome: cm ? 'Short' : null,
+                    len: cm ? 'short' : '',
+                    match: asked ? st.manual[k] : !!cm
+                }
             }
             return {rule, kind: 'manual', key: k, match: !!st.manual[k]}
         });
@@ -702,15 +739,25 @@
         }
         out.append(res);
         // 4. comparison with the Database
-        const key = strip(word), hits = rows.filter(r => strip(r.word) === key);
+        // exact matches only: the whole Database word must equal the typed word (vowel points and ligature spelling are ignored,
+        // but parentheses, hyphens and spaces count). With "Verb" checked, the typed word, ending included, is what is compared.
+        const key = exactKey(word), hits = key ? rows.filter(r => exactKey(r.word) === key) : [];
         if (hits.length) {
             out.append(el('h2', null, 'Compare with the Database'));
+            out.append(el('p', 'mut', hits.length > 1 ? `${hits.length} Database entries match this word exactly. Check which one you mean.` : '1 Database entry matches this word exactly.'));
             for (const r of hits) {
                 const c = el('div', 'card'),
                     sound = r.sounds && r.sounds[0] ? r.sounds.map(x => x[0] + ' - ' + x[1]).join('; ') : 'none recorded';
+                // which entry is this? word, gloss and part of speech
+                const who = el('div', 'dbw');
+                who.append(el('span', 'dbword', r.word));
+                who.lastChild.lang = 'yi';
+                who.append(` · ${r.gloss || 'no gloss'}${r.pos ? ' · ' + r.pos : ''}`);
+                c.append(who);
                 c.append(el('div', null, `Database: rule “${r.rule || 'none'}”; ${sound}; follows rule: ${r.follows || '—'}`));
                 const same = W ? sameRule(W.rule, r.rule) : norm(r.rule) === 'na';
-                const dbLen = lenOf(r.sounds && r.sounds[0] && r.sounds[0][0]), appLen = W ? (W.len !== undefined ? W.len : lenOf(W.rule.d)) : '';
+                const dbLen = lenOf(r.sounds && r.sounds[0] && r.sounds[0][0]),
+                    appLen = W ? (W.len !== undefined ? W.len : lenOf(W.rule.d)) : '';
                 const l1 = el('div');
                 l1.append('Rule: ');
                 l1.append(el('span', same ? 'ok' : 'bad', same ? 'same as the app' : `different (app: ${W ? W.rule.b : 'no rule'})`));
@@ -780,6 +827,7 @@
 
     // Loads the saved copies (unless skipSaved), then fetches fresh ones from the sheet and the guide.
     let loading = false;
+
     async function loadData(skipSaved) {
         if (loading) return;
         loading = true;
