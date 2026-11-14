@@ -645,6 +645,12 @@
                 } else why = 'not one of the forms the guide lists for the key verbs (only the exact listed forms are checked, so forms with a prefix are not)';
                 return {rule, kind: 'manual', key: k, guessed: true, why, outcome, len, match: asked ? st.manual[k] : !!vm}
             }
+            if (rule.srule && rule.srule.title === 'Irregular comparative stems') {
+                // the app tries first, from the examples in the guide; you can still change the answer
+                const cm = Rules.matchComparative(srules, word), asked = st.manual[k] !== undefined;
+                const why = cm ? `the word ${cm.how}` : 'not one of the comparatives the guide lists (שענער, קלענער, בעסער, גרעסער), or their endings and superlatives';
+                return {rule, kind: 'manual', key: k, guessed: true, why, outcome: cm ? 'Short' : null, len: cm ? 'short' : '', match: asked ? st.manual[k] : !!cm}
+            }
             return {rule, kind: 'manual', key: k, match: !!st.manual[k]}
         });
         const win = steps.findIndex(s => s.match), W = win >= 0 ? steps[win] : null;
