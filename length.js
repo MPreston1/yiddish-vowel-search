@@ -50,20 +50,38 @@
         }
     }
 
+    // Search key for Yiddish words: keeps the vowel marks and letter marks (פּ vs פֿ, ב vs בּ vs בֿ, ש vs שׂ, אַ vs אָ),
+    // but treats the ligatures as their spelled-out letters (װ = וו, ױ = וי, ײ = יי). Punctuation and spaces are ignored.
+    const searchKey = s => (s || '').normalize('NFD').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, '');
+    const keyCache = new WeakMap();   // row -> its search key, computed once
+    const rowKey = r => {
+        let k = keyCache.get(r);
+        if (k === undefined) keyCache.set(r, k = searchKey(r.word));
+        return k
+    };
+
+    // Partial match, but a typed letter never matches a longer version of itself:
+    // ב must not match בּ or בֿ, ש must not match שׂ, א must not match אַ. So the match may not end just before a mark.
+    function findAt(s, q) {
+        for (let p = s.indexOf(q); p >= 0; p = s.indexOf(q, p + 1))
+            if (!/[\u0591-\u05C7]/.test(s[p + q.length] || '')) return p;
+        return -1
+    }
+
     function search() {
         wzOn = false;
-        const raw = $('q').value.trim(), q = norm(raw);
+        const raw = $('q').value.trim(), latin = /[a-z]/i.test(raw), q = latin ? norm(raw) : searchKey(raw);
         if (!q) {
             matches = [];
             $('results').innerHTML = rows.length ? '<p class="msg">Type a Yiddish word to search. Partial matches are included.</p>' : '';
             $('more').hidden = true;
             return
         }
-        const latin = /[a-z]/i.test(raw), key = latin ? 'ng' : 'nw', m = [];
+        const m = [];
         for (const r of rows) {
-            const s = r[key];
+            const s = latin ? r.ng : rowKey(r);
             if (!s) continue;
-            const p = s.indexOf(q);
+            const p = latin ? s.indexOf(q) : findAt(s, q);
             if (p < 0) continue;
             m.push([s === q ? 0 : p === 0 ? 1 : 2, s.length, r])
         }
