@@ -478,7 +478,7 @@
         wzOn = true;
         wz = {
             word, hist: [], germanic: null, cur: {t: 'choose'},
-            auto: {src: 'germanic', verb: false, stress: null, boundary: null, manual: {}}
+            auto: {src: 'germanic', verb: false, stress: null, boundary: null, manual: {}, view: null, prefix: false}
         };
         renderWizard()
     }
@@ -637,7 +637,7 @@
         out.append(sw);
         out.append(el('p', 'wmut', 'Only for words that are not from loshn-koydesh. The app answers every question it can from the spelling and shows each answer, so you can see where it goes wrong.'));
         // options
-        const opts = el('div', 'opts'), l1 = el('label'), sel = el('select'), l2 = el('label'), cb = el('input');
+        const opts = el('div', 'opts'), l1 = el('label'), sel = el('select'), l2 = el('label'), vsel = el('select');
         for (const [v, t] of [['germanic', 'Germanic'], ['slavic', 'Slavic'], ['english', 'English'], ['other', 'Other / not sure']]) {
             const o = el('option', null, t);
             o.value = v;
@@ -650,16 +650,21 @@
             renderAuto()
         };
         l1.append('Source ', sel);
-        cb.type = 'checkbox';
-        cb.checked = st.verb;
-        cb.onchange = () => {
-            st.verb = cb.checked;
+        for (const [v, t] of [['no', 'No'], ['yes', 'Yes']]) {
+            const o = el('option', null, t);
+            o.value = v;
+            vsel.append(o)
+        }
+        vsel.value = st.verb ? 'yes' : 'no';
+        vsel.onchange = () => {
+            st.verb = vsel.value === 'yes';
+            st.prefix = false;
             st.stress = null;
             st.boundary = null;
             st.manual = {};
             renderAuto()
         };
-        l2.append(cb, ' Verb (ignore the -ן / -ען ending)');
+        l2.append('Is the word the infinitive form of a verb? ', vsel);
         opts.append(l1, l2);
         out.append(opts);
         autoBody(out, st, word);
@@ -707,22 +712,39 @@
         const nVowels = a.units.filter(u => u.t === 'V' && !u.syl).length;
         if (rootNote) out.append(el('p', 'wmut', rootNote));
         if (a0.units.some(u => u.syl)) out.append(el('p', 'wmut', `Final ${w.slice(-1)} after a consonant is treated as a syllabic vowel.`));
-        // 0. stressed prefix: its end counts as a root boundary
-        if (a0.units.length > 1) {
-            out.append(el('p', 'wmut', bnd ? `Stressed prefix: ${a0.units.slice(0, bnd).map(u => u.s).join('')}. Its end counts as a root boundary. Tap its last letter again to clear.` : 'If the word starts with a stressed prefix, tap the last letter of the prefix. Its end then counts as a root boundary.'));
-            const pre = el('div', 'afpre');
-            a0.units.forEach((u, i) => {
-                const b = el('button', 'ltr' + (i < bnd ? ' on' : ''), u.s);
-                b.type = 'button';
-                b.lang = 'yi';
-                b.onclick = () => {
-                    st.boundary = st.boundary === i + 1 ? null : i + 1;
-                    st.stress = null;
-                    renderAuto()
-                };
-                pre.append(b)
-            });
-            out.append(pre)
+        // 0. stressed prefix: asked as a Yes/No question; on Yes, tap the last letter of the prefix (its end counts as a root boundary)
+        if (a0.nuclei.length > 1) {
+            const pl = el('label', 'pq'), psel = el('select');
+            for (const [v, t] of [['no', 'No'], ['yes', 'Yes']]) {
+                const o = el('option', null, t);
+                o.value = v;
+                psel.append(o)
+            }
+            psel.value = st.prefix ? 'yes' : 'no';
+            psel.onchange = () => {
+                st.prefix = psel.value === 'yes';
+                if (!st.prefix) st.boundary = null;
+                st.stress = null;
+                renderAuto()
+            };
+            pl.append('Does the word start with a stressed prefix? ', psel);
+            out.append(pl);
+            if (st.prefix) {
+                out.append(el('p', 'wmut', bnd ? `Stressed prefix: ${a0.units.slice(0, bnd).map(u => u.s).join('')}. Its end counts as a root boundary. Tap its last letter again to clear.` : 'Tap the last letter of the prefix. Its end then counts as a root boundary.'));
+                const pre = el('div', 'afpre');
+                a0.units.forEach((u, i) => {
+                    const b = el('button', 'ltr' + (i < bnd ? ' on' : ''), u.s);
+                    b.type = 'button';
+                    b.lang = 'yi';
+                    b.onclick = () => {
+                        st.boundary = st.boundary === i + 1 ? null : i + 1;
+                        st.stress = null;
+                        renderAuto()
+                    };
+                    pre.append(b)
+                });
+                out.append(pre)
+            }
         }
         // 1. syllables
         out.append(el('p', 'wmut', nVowels > 1 ? `Tap the stressed vowel. ${st.stress != null && st.stress < a.nuclei.length ? 'Stress set by you.' : 'Stress guessed by the app (Germanic: first vowel of the root; other sources: second to last).'}` : 'One vowel.'));
@@ -771,7 +793,16 @@
                         len = outcome.toLowerCase()
                     } else outcome = `Short or Long, depending on the use: ${via}`
                 } else why = 'not one of the forms the guide lists for the key verbs (only the exact listed forms are checked, so forms with a prefix are not)';
-                return {rule, kind: 'manual', key: k, guessed: true, why, outcome, len, match: asked ? st.manual[k] : !!vm}
+                return {
+                    rule,
+                    kind: 'manual',
+                    key: k,
+                    guessed: true,
+                    why,
+                    outcome,
+                    len,
+                    match: asked ? st.manual[k] : !!vm
+                }
             }
             if (rule.srule && rule.srule.title === 'Short perfect stems') {
                 const pm = Rules.matchShortPerfect(srules, word), asked = st.manual[k] !== undefined;
@@ -802,7 +833,7 @@
             res.append(el('div', 'name', 'Only one length'));
             res.append(el('p', 'wmut', `The stressed vowel (${sv}) has only one length. Only אָ, ע, ו / וּ and י / יִ come in short and long, so there is no vowel-length rule to find. In the Database this would be "n/a".`))
         } else if (W) {
-            res.append(el('div', 'lab', 'The rule that applies is'));
+            res.append(el('div', 'lab', 'The app believes the following rule applies'));
             res.append(el('div', 'name', W.rule.b));
             const o = el('div', 'out');
             setText(o, W.outcome || W.rule.d || W.rule.c, W.rule.b);
@@ -850,9 +881,25 @@
         if (oneLength) return;
         // 5. the walk through the rules
         out.append(el('h2', null, 'Every question and the app’s answer'));
-        out.append(el('p', 'wmut', 'Rules are checked in the order of the Rules tab; the first Yes applies. Rules the app cannot judge from spelling are assumed No until you mark them.'));
+        out.append(el('p', 'wmut', 'Rules are checked in the order of the full list set forth below; the first Yes applies. Rules the app cannot judge from spelling are manually adjustable.'));
+        // two toggles: show only the rules the user can adjust, or all of them; tapping the open one closes the list
+        const views = el('div', 'views');
+        for (const [v, t] of [['adj', 'Show adjustable rules'], ['all', 'Show all rules']]) {
+            const b = el('button', st.view === v ? 'on' : '', t);
+            b.type = 'button';
+            b.setAttribute('aria-expanded', st.view === v);
+            b.onclick = () => {
+                st.view = st.view === v ? null : v;
+                renderAuto()
+            };
+            views.append(b)
+        }
+        out.append(views);
+        if (st.view === 'adj' && !steps.some(x => x.kind === 'manual')) out.append(el('p', 'wmut', 'None of the rules for this word can be adjusted.'));
         steps.forEach((s, i) => {
-            const row = el('div', 'step' + (i === win ? ' win' : win >= 0 && i > win ? ' after' : '')), head = el('div');
+            if (!st.view || (st.view === 'adj' && s.kind !== 'manual')) return;
+            const row = el('div', 'step' + (i === win ? ' win' : win >= 0 && i > win ? ' after' : '')),
+                head = el('div');
             if (s.kind === 'manual') {
                 const tg = el('span', 'tg');
                 for (const [label, val] of [['No', false], ['Yes', true]]) {
