@@ -310,31 +310,15 @@ const Rules = (function () {
         return hits.length ? {verb: hits[0].verb, lens: [...new Set(hits.map(h => h.len))], hits} : null
     }
 
-    // Irregular comparative stems: the Examples on the slide (שענער, קלענער, ...) are the comparatives. A word also counts if it is
-    // one of them with an adjective ending (-ע, -ן, -עם) or the matching superlative (stem + סט, with or without an ending).
-    // Returns {example, how} or null.
+    // Irregular comparative stems: a word counts if it is one of the comparatives given as Examples on the slide (שענער, קלענער, ...).
+    // Adjective endings and superlatives are not checked. Returns {example, how} or null.
     function matchComparative(srules, word) {
         const sr = (srules || []).find(r => r.title === 'Irregular comparative stems'), k = norm(word);
         if (!sr || !k) return null;
         const part = sr.parts.find(p => /^examples?$/i.test(p.label)) || sr.parts[1];
         if (!part) return null;
-        const exs = plain(part.paras).split(/[,;\n]/).map(x => x.trim()).filter(Boolean);
-        for (const ex of exs) {
-            const e = norm(ex);
-            if (!e) continue;
-            if (k === e) return {example: ex, how: 'is one of the comparatives listed in the guide'};
-            for (const end of ['ע', 'ן', 'עם']) if (k === e + end) return {
-                example: ex,
-                how: `is the listed comparative ${ex} with the ending ${end}-`
-            };
-            if (e.endsWith('ער')) {
-                const stem = e.slice(0, -2), sup = stem + (stem.endsWith('ס') ? 'ט' : 'סט');   // בעס- gives בעסט, שענ- gives שענסט
-                for (const end of ['', 'ע', 'ן', 'ער', 'עם']) if (k === sup + end) return {
-                    example: ex,
-                    how: `looks like the superlative of the listed comparative ${ex}`
-                }
-            }
-        }
+        for (const ex of plain(part.paras).split(/[,;\n]/).map(x => x.trim()).filter(Boolean))
+            if (norm(ex) === k) return {example: ex, how: 'is one of the comparatives listed in the guide'};
         return null
     }
 
