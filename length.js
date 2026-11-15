@@ -18,6 +18,25 @@
         $('count').textContent = msg
     }
 
+    // The approved copies of the sheet live next to the app (data/database.csv and data/rules.csv).
+    // A Raspberry Pi proposes updates as a GitHub pull request, and they go live when that is merged.
+    // If a copy is missing, fall back to the live Google Sheet.
+    async function fetchData(localUrl, googleUrl) {
+        try {
+            const res = await fetch(localUrl, {cache: 'no-cache'});
+            if (res.ok) {
+                const t = await res.text();
+                if (t.trim() && !t.trim().startsWith('<')) return t
+            }
+        } catch (e) {
+        }
+        const res = await fetch(googleUrl);
+        if (!res.ok) throw new Error(res.status);
+        const t = await res.text();
+        if (t.trim().startsWith('<')) throw new Error('Sheet is not public');
+        return t
+    }
+
     async function load(force) {
         if (!force) {
             try {
@@ -33,10 +52,7 @@
         }
         try {
             setStatus(rows.length ? 'Updating…' : 'Loading data…');
-            const res = await fetch(CSV_URL);
-            if (!res.ok) throw new Error(res.status);
-            const text = await res.text();
-            if (text.trim().startsWith('<')) throw new Error('Sheet is not public');
+            const text = await fetchData('data/database.csv', CSV_URL);
             rows = build(text);
             sheetAt = Date.now();
             try {
@@ -415,10 +431,7 @@
         } catch (e) {
         }
         try {
-            const res = await fetch(RULES_URL);
-            if (!res.ok) throw new Error(res.status);
-            const text = await res.text();
-            if (text.trim().startsWith('<')) throw new Error('Sheet is not public');
+            const text = await fetchData('data/rules.csv', RULES_URL);
             const b = Rules.buildRules(text);
             rhead = b.head;
             rules = b.rules;
