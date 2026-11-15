@@ -6,7 +6,7 @@ const Rules = (function () {
     const SHEET_ID = '1Vip_J4QjpMBorfov15jmbXouSXQMAmMXT0EbYsYfPkc', GID = '671156978';
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&gid=${GID}`;
     const RULES_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&sheet=Rules`;
-    const PPTX_URL = 'guide.pptx';
+    const PPTX_URL = 'data/guide.pptx', OLD_PPTX_URL = 'guide.pptx';   // the old place is only tried if the new one is missing
     const PLACE_URL = 'https://yivo.org/yiddishland-topo';
 
     const norm = s => (s || '').normalize('NFD').replace(/[\u0591-\u05C7]/g, '').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').replace(/[\s\-()]/g, '').toLowerCase();
@@ -242,11 +242,18 @@ const Rules = (function () {
         return out
     }
 
+    // Downloads guide.pptx from the data folder (or, if it is not there yet, from next to index.html).
+    async function fetchGuide() {
+        let r = await fetch(PPTX_URL, {cache: 'no-cache'});
+        if (!r.ok) r = await fetch(OLD_PPTX_URL, {cache: 'no-cache'}).catch(() => r);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r
+    }
+
     // Fetches guide.pptx and returns just its slide rules (the experimental page uses this; the main app reads the whole file).
     async function loadSlideRules() {
         if (!window.JSZip) throw new Error('unzip library missing');
-        const r = await fetch(PPTX_URL, {cache: 'no-cache'});
-        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const r = await fetchGuide();
         return parseSlideRules((await openPptx(await r.arrayBuffer())).slideXml)
     }
 
@@ -471,6 +478,7 @@ const Rules = (function () {
         CSV_URL,
         RULES_URL,
         PPTX_URL,
+        fetchGuide,
         PLACE_URL,
         norm,
         loose,

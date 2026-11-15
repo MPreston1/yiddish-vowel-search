@@ -1,7 +1,7 @@
 (function () {
-    const {CSV_URL, PPTX_URL, RULES_URL} = Rules;
+    const {CSV_URL, RULES_URL, fetchGuide} = Rules;
     const CACHE_KEY = 'vowel-lookup-v1', PAGE = 50;
-    const SLIDE_NO = 2, INTRO_NO = 1;   // slide 2 tables and footnotes, slide 1 intro: read from guide.pptx (same folder as index.html)
+    const SLIDE_NO = 2, INTRO_NO = 1;   // slide 2 tables and footnotes, slide 1 intro: read from guide.pptx (in the data folder)
     const {get: idbGet, set: idbSet} = kv('vowel-lookup');
     let rows = [], matches = [], shown = 0, sheetAt = 0;
     const root = document.getElementById('app-l'), $ = id => document.getElementById('l-' + id);
@@ -292,8 +292,7 @@
         if (slide) renderSlide();
         try {
             if (!window.JSZip) throw new Error('unzip library missing');
-            const r = await fetch(PPTX_URL, {cache: 'no-cache'});
-            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const r = await fetchGuide();
             slide = await parsePptx(await r.arrayBuffer());
             slide.at = Date.now();
             slideErr = '';
