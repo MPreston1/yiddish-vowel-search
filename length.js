@@ -150,7 +150,7 @@
         row('Part of speech', r.pos);
         const sn = (r.sounds || []).length ? el('div') : null;
         if (sn) for (const [h, v] of r.sounds) sn.append(el('div', null, h ? `${h} - ${v}` : v));
-        row('Sound', null, sn);
+        row('Length', null, sn);
         const rl = r.rule ? findRule(r.rule) : null, sr = !rl && r.rule ? findSlideRule(r.rule) : null;
         if (rl || sr) {
             const rb = el('button', 'rulelink', r.rule);
