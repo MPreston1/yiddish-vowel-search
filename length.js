@@ -492,7 +492,7 @@
         const R = $('results'), box = el('div', 'wiz');
         R.innerHTML = '';
         box.append(el('p', 'wq', 'Type a word in the search box first.'));
-        box.append(el('p', 'wmut', 'The rule finder works on a word. Type a Yiddish word above, then tap “Help me find the rule” again.'));
+        box.append(el('p', 'wmut', 'The rule finder works on a word. Type a Yiddish word above, then click “No match in the database?” again.'));
         R.append(box);
         $('q').focus()
     }
@@ -884,8 +884,8 @@
         out.append(el('p', 'wmut', 'Rules are checked in the order of the full list set forth below; the first Yes applies. Rules the app cannot judge from spelling are manually adjustable.'));
         // two toggles: show only the rules the user can adjust, or all of them; tapping the open one closes the list
         const views = el('div', 'views');
-        for (const [v, t] of [['adj', 'Show adjustable rules'], ['all', 'Show all rules']]) {
-            const b = el('button', st.view === v ? 'on' : '', t);
+        for (const [v, t] of [['adj', 'adjustable rules'], ['all', 'all rules']]) {
+            const b = el('button', st.view === v ? 'on' : '', (st.view === v ? 'Hide ' : 'Show ') + t);
             b.type = 'button';
             b.setAttribute('aria-expanded', st.view === v);
             b.onclick = () => {
