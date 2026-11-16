@@ -1,0 +1,234 @@
+=== Slide 1 ===
+Fortunately, vowel length is predictable from phonetic environment alone about 75% of the time. To find the length of a stressed vowel:
+Pick the rule set. For loshn-koydesh words (in Hebrew/Aramaic spelling), use page 3; for all other words, page 4.
+Go down the rules in order and stop at the first match. Known exceptions are listed next to each rule; an asterisk marks words attested with both lengths.
+If no rule matches, check page 5 (key verbs and patterns) and page 6 (all remaining unpredictable words).
+Still unsure? Check the companion database. Eastern European place names are unpredictable; see YIVO's Yiddishland database.
+Page 7 covers words whose length differs between CY and SEY; page 8, minimal pairs.  The companion database contains ~3,000 words – including dozens of examples for each rule and the 400–500 words that simply have to be memorized – based primarily on a digitized corpus of Sholem Aleichem’s work, prepared and lemmatized by Raphael (Refoyl) Finkel. You can use this guide in conjunction with my cheatsheet on the “oy” vowel. See also Leyzer Burko’s Polish Yiddish Guide.
+Compiled by Arun (Arele) Schaechter Viswanath, Fall 2026
+Southern Yiddish dialects, divided into CY (Central, or “Polish”; includes Hasidic Hungarian Yiddish, a.k.a. HHY) and SEY (Southeastern, or “Ukrainian”), feature a phonemic distinction between two different types of stressed  אָ, ע, י, ו [o, e, i, u], where NEY (Northeastern, or “Litvish”) does not; for example, the graphic doublet בין ‘(I) am’ and  בין ‘bee’ are respectively pronounced /bɪn/ and /bi:n/ in CY, but are both /bin/ in NEY.  This distinction is referred to as “length” for historical reasons, although the difference significantly involves quality and, in SEY, doesn’t involve length at all. For you nerdy linguist types: a vowel is short if it was short in the contributing language and occurred in a closed syllable (closed by 1 consonant in Hebrew, or 2 consonants for non-Hebrew words). For those of us without this specialized knowledge, though, length needs to be learned consciously because this distinction is not reflected in the Yiddish alphabet, nor in Standard Yiddish transliteration.
+L.O.K.SH.N Guide to Vowel Length |
+לאַנג אָדער קורץ? שפּראַכיקע נאָטיצן (ל.אָ.ק.ש.ן)
+HOW TO USE THIS GUIDE AND COMPANION DATABASE
+WHAT IS VOWEL LENGTH?
+Thanks to Raphael Finkel, Leyzer Burko, Yankl-Peretz Blum, and Isaac Bleaman for their assistance. Information on dialectal pronunciations was drawn primarily from YDD (Yiddish Dialect Dictionary), CSYE (Corpus of Spoken Yiddish in Europe), EYDES’s audio clips from the LCAAJ (Language and Culture Archive of Ashkenazic Jewry), M. Weinreich’s Geshikhte fun der yidisher shprakh, S. Birnbaum’s Yiddish: A Survey and a Grammar, N. Prilutski’s Dialektologishe paraleln un bamerkungen, D. Katz’s YCD (Yiddish Cultural Dictionary), S.-M. Lifshits’s Yiddish-Russian dictionary, and many individual informants.
+REFERENCES & ACKNOWLEDGEMENTS
+‹#›
+=== Slide 2 ===
+Vowels in unstressed words (e.g. סע = עס, מע, זשע) are never long, and usually reduced to /ə/.
+Length distinction for [e, u, i] is neutralized before [ng, nk], though the precise realization seems to differ by variety and the linguist describing it. In the database, they are consistently marked as short for convenience.
+This guide does NOT cover אַ vs ײַ (i.e. short vs. long [a]), as this is immediately apparent graphically. It also does not cover the more limited CY phenomenon of אַ representing /aː/ in certain words borrowed from German, e.g. פּלאַן.
+A number of words have been imported from modern German that have long /oː/ in German. Their nativization into Yiddish varies by subdialect and the individual word, and can range from simply short /ɔ/ to long /oː/ or even long /uː/. These are marked in the database in the “Notes” column. Examples include מיליאָן, (דער) טאָן, מאָדע.
+In CY, long [o] has three different realizations:
+Diphthongized /uːə/ when preceding [d, t, n, l, r] in a closed syllable, e.g. ראָד /ruːəd/, באָרד /buːərt/, מאָל /muːəl/. The “offglide schwa” can also be heard in long [i] preceding [r]. However, this schwa is not found in all CY, it is notably absent in HHY.
+“Shortened” /u/ before labials and velars, e.g. זקן, געגראָבן, בחור, שלאָפֿן (regionally, שטראָפֿן is an exception, with /uː/).
+Plain long /uː/ everywhere else, e.g. דאָ /duː/, כּשר /kuːsher/, שאָדן /shuːdn/.
+Words of newer vintage with [u] are often pronounced as /u/, and not as /ɪ/ or /i/: שטורעם (/shturəm/), גרופּע (/grupə/),  פּובליקום (/publɪkum/). These words are marked as such in the database.
+Long [e] does not appear before [kh]. Additionally, some parts of SEY have no length distinction in the sequence [er]: װער (CY /veɪ̯ər/, SEY /vɛɪ̯r/ or /vɛr/).
+Examples of vowel lowering before [r, kh]: קורץ (CY /kɔrts/, SEY /kɛrts/), קירצער (/kɛrtsər/), פּוך (CY /pɔkh/, SEY /pɛkh/), ליכט (/lɛkht/).
+Vowel lowering has gone further in some parts of CY, where /ɛr/ — whether from underlying יר or ער — is pronounced /ar/ (same for /ɛkh/), e.g. װירט /vɛrt/ or /vart/, ליכט /lɛkht/ or /lakht/.  The database contains some 40 examples; see items marked “short {u, i} + {r, kh} = lowered” in the “Other grouping” column. Lowering does not apply to words of newer vintage, e.g. װיכטיק /vikhtɪk/ or /vɪkhtɪk/, שטורעם /shturem/.
+In the tables below summarizing the realization of the “short” and “long” stressed¹ vowels in the two Southern dialects, the [square brackets] represent standard transcription — and thus stand in for the corresponding Yiddish graphemes אָ, ע, י, ו) — while /slashes/ are used to convey dialectal pronunciation.
+ALL POSITIONS EXCEPT BEFORE [r, kh]²
+NOTES
+BEFORE [r, kh]
+HOW THE VOWELS ARE PRONOUNCED
+|  |  | CY |  | SEY | 
+| Vowel | Transcr. | Short | Long | Short | Long
+| אָ | [o] | /ɔ/ | /uː(ə)/~/u/* | /ɔ/ | /u/
+| ע | [e] | /ɛ/, /a/⁹ | /eɪ̯ə/⁷ | /ɛ/ | /ɛɪ̯/, /ɛ/⁷
+| ו | [u] | /ɔ/⁸ | /iːə/⁵ᵃ | /ɛ/⁸ | /i/
+| י | [i] | /ɛ/⁸, /a/⁹ |  |  | 
+|  |  | CY |  | SEY | 
+| Vowel³ | Transcr. | Short | Long | Short | Long
+| אָ | [o]⁴ | /ɔ/ | /uː(ə)/~/u/⁵ | /ɔ/ | /u/
+| ע | [e] | /ɛ/ | /eɪ̯/ | /ɛ/ | /ɛɪ̯/
+| ו | [u]⁶ | /ɪ/ | /iː/ | /ɪ/ | /i/
+| י | [i] |  |  |  | 
+‹#›
+Pronunciation
+לאַנג אָדער קורץ?
+=== Slide 3 ===
+Loshn-koydesh (words with Hebrew/Aramaic spelling)
+Instructions: Follow the rules sequentially, stopping at the first match. Apply the rules to the dictionary transcription, only referencing the Hebrew spelling when the rule explicitly calls for it. A full explanation of each rule (with less jargon) can be found here.
+| № | Environment | Result | Hit % | Items | Examples | Exceptions
+| 1 | {oye, o(y)i} with komets | LONG | 71% | 21 | גאָון, ברוכים־הבאָים, הלװאה, חטאָים, משוגעים, ראוי*, רעה, תּנאָים (=באַדינגונגען), הכנעה, רפֿאל | אפֿרים, ־ ָיון (בזיון, נסיון), כּלא־היה, מעשׂה־שהיה, תּנאָים (=פֿאַרקנסונג)
+| 2 | V + {V, #} | LONG | 100% | 25 | דניאל, ידוע, לוח, מיאוס, פּה, קריאה, ראיה (=זעקראַפֿט), רוח, רפֿואה, שעה | None! (קריאת־שמע is not an exception, as the transcription is [krishme])
+| 3 | V + {silent guttural} | LONG | 100% | 7 | אַבֿרהם, נאמן, נהנה, נהרג, נעלם, קהל, תּענית | None!
+| 4 | Closed by consonant / (1 word-finally or 2 word-medially, where the 2nd consonant could be silent, but not syllabic) | SHORT | 90% | 212 | אבֿיון, אות, אַחוץ, אפֿשר, בילבול, בנין, בריה, חורבן, חצות, טומאה, יורשים, יש, כּוס, כּיס, מדרש, מינהג, מיסחר, מת, ניבֿהל, סדום, קינאה, רב, שמעון, שׂינאה | • Names of letters: װאָװ, יוד, כּף, נון, קוף, שין, שׂין, תװ, תּװ / • Other exceptions: אָבֿ, איש*, בעל־הבית, גבֿיר*, יריד*, (אױף צו) להכעיס, מין, רבֿ, שיר / • Examples not covered by rule because second consonant is syllabic:  רגל, קרן, שכן, חתן
+| 5 | Any e (not ey) | LONG | 81% | 85 | בגד, דרך, חסד, טבֿע, מחותּנתטע, פּרא־אָדם, צדקת, רגע | אמת, אדום, אלא*, (פּרשת) אמור, אנוש, אלול, גיהנום, היזק, היסב־בעט, היסח־הדעת, היתּר, עשׂה, רבי, תּירוץ
+| 6 | Any o (not oy) | LONG | 97% | 170 | אַלמנה, אָמן, בחור, ברכה, חסרון, למשל, לשון, נגיד, נחום, נישקשה | מסתּמא*, (יצר־, לשון־, עין־)הרע*, יוסף /יאָסעפֿ/
+| 7 | V + {ב, כּ, פּ, תּ} | SHORT | 100% | 29 | דיבוק, חופּה, ייִתּור, כּתובה, מותּר, מסופּק, סוכּה, שיכּור | None!
+| 8 | V + {בֿ, כ, פֿ, ת} | LONG | 95% | 19 | אַסיפֿה, באַריכות, גופֿא, מוכן, ראובֿן, תּשובֿה, שטותים* | None!
+| 9 | V + non-silent guttural | LONG | 93% | 14 | בשׂורה, דירה, ייִחוס, מטורף*, ניחא, פּורים | 
+| 10 | Followed by dagesh / ◆ ◆ | SHORT | 94% | 71 | אַפֿילו, גדולה, װידוי, כּולו(־חײבֿ), כּיװן, מידה, מידות, ניגון, ניסים, עיקר, שידוך, שינוי | בתולה*, חוקים, מחיצה*, מיושבֿ
+| 11 | Derived, syllable-opening | LONG | >95% | 16 | אָח < אָחי, דיבוקים < דיבוק, דינים < דין, זכותים/זכותו < זכות, חסידות < חסיד, חצופֿה < חצוף, / נגידים/נגידית/נגידיש < נגיד, סוסים < סוס | גופֿים*
+| 12 | Derived, all others | SAME | 100% | 43 | Long:  אַבֿרהמל < אַבֿרהם, בחורל < בחור, דוכנען < דוכן,  לערך < ערך / Short: בסוד < סוד, פּשטל < פּשט, שמען < שם | 
+| 13 | All others | LONG | >95% | 48 | אַכילה, בושה, בימה, דינה, חושים, חיונה, חתימה, לולבֿ, לחלוטין, (ברית־)מילה, נעילה, סעודה, פּרוטה, שחיטה, שתּיקה, תּפֿיסה | אמונה, מהומה, מומר, מוסף, מוסר, מזוזה, ניסן, סימן, קדושה*, קינה*, שכינה*, שמיטה*
+V = vowel · C = consonant · # = root boundary · {indicates choice } · [*] = attested with both lengths · ◆◆ extra hard
+‹#›
+לאַנג אָדער קורץ?
+=== Slide 4 ===
+Instructions: Follow the rules sequentially, stopping at the first match. Legend at the bottom explains the symbols. A full explanation of each rule (with less jargon) can be found here.
+All other words
+| № | Environment | Result | Hit % | Items | Examples | Exceptions (exhaustive unless marked otherwise)
+| 1 | Derived | SAME | 98% | 327 | באַנוצן < נוצן, געשלאָפֿן < שלאָפֿן, גראָבט < גראָבן, זיסער < זיס, טרעגער < טראָגן, סעדער < סאָד,  פֿענדל < פֿאַן, פֿענדל < פֿאָן, | Long vowel despite base vowel being short or /a/: / לעבל < לאַבן, געפֿערלעך < געפֿאַר, פּערזענלעך* < פּערזאָן, פּלענער* < פּלאַן, געפֿעס < פֿאַס, גיטל* < גוט
+| 2 | Slavic  ◆ | SHORT | >90% | 144 | • Typical Slavic words: אָדליגע, באָרען, בוריק, בידנע, דזשעגעכץ, דלוטע, דנאָ, זאַקאָן, טשאָרט, ליסע, נאַהיט, סאָנישניק, סופֿיט, ספּאָדעק, קליאָן, שטשור. / • Slavic words that are hard to clock: באָב, בעז, ברוד, ברעג, גאָל (=הױל), הובל, טוט (=בײַטל), יאָדער, מאָל (=נאַכט־פֿלאַטערל), נאָל (=נול), נעבעך, סלוך, פּאָל, פּאָרעך, פּוך, פּול, פּלוט, פּליך, קאָװאַל, קלין, ראָל, רובל | באָבע*, גאָלן, הירזשען, װיכער*, זאָד(יק), טאָטשקע, טוטין/טיטון, סאָד, סטאָן, פּענעץ, צװאָרעך, צװיט*, קראָליק*, קרעטשמע, ריװ, שקעטל
+| 3 | English | SAME |  |  | Older borrowings: באָס, בלאָפֿן, מיסטער, פּעדלער, פּעני / Spelling of new borrowings of English /u/  in HHY: שאר, אינשארענס, ביוטיפאל | 
+| 4 | V + {V, #} | LONG | 95% | 61 | בלאָ, דאָ, דראָען*, זען, טון, קו, פֿרי, מיִען, קריִע, װיִע | Interjections (יאָ, יע, אָ, עט, פֿע, בראַװאָ, װיאָ); names of letters and symbols (בע, צע, דע, דאָ, סאָל); other words (דנאָ, בראַװאָ).
+| 5 | {e, o} + {s, kh} | SHORT | 90% | 89 | ברעכן, דאָך, װאָך, טאָכטער, מעסער, נאָך (מער), נעסט*, עסן, קאָכן, רעכענען, שװעסטער | באָך, געפֿעס, דאָס, װאָס, מאָס, מעסטל , נאָכ־/(דער)נאָך, שמאָכן
+| 6 | or + {dental, V, #} | UNPREDICTABLE |  |  | • Long: אַרבעטאָרין/אַרבעטאָרער, אָרעם (האַנט), אָרעם (נישט רײַך), באָרד, באָרװעס, בעפֿאָר, גאָר, גאָרטן, גאָרן, גאָרקיך, האָר, װאָר, װאָרעם=װאָרן, װאָרענען, חבֿרטאָרין, טאָרן, יאָר, פּאָר, פֿאָרן, קאָרט, קװאָרט, קלאָר, (פֿאַר)שפּאָרן / • Short: אַקאָרד, אָרדן, אָרט, דאָרט, דאָרן, האָרן, װאָרט, װאָרעם, טראַנספּאָרט, מאָרד, סאָרט, פֿאָרט, פֿאָרנט, פּראָפֿעסאָרן, צאָרן, קאָרן / • Dialect-specific outcomes (see database): געװאָר, טאָרט, פּאָמידאָר, פֿאָר־, פֿאָרױס, פֿאָריק, ראָר, שפּאָר | 
+| 7 | Vr + # | LONG | 100% | 61 | אוראײניקל, באַשערן, געהערן, טיר, מיליטער, נאַכער, פֿור, רירן, שנור (= שטריק), שנור(־און־שװיגער) | None! (Apparent exceptions like שטשור are Slavic.)
+| 8 | er + {dental, V} | LONG | 77% | 22 | אַמעריקע, געדערעם*, הערינג, װערט, לערער, ערנ(װאָרט), ערנצט, פֿערד, פּערל, שװערד, שטערן (קאָפּ), שטערן (אַרן), שטערן (הימל) | בערנע, גובערניע, לערנען*, פֿערט
+| 9 | Vr + C | SHORT | 92% | 53 | באָרגן, געװירץ, דאָרשט, דורך, הורט, הירש, װירט, טערק, מירמלשטײן, ערגעץ, ערגער, פֿערציק/פֿערצן, קורץ, קערפּער | גערשט, הירזש (תּבֿואה), ערשט
+| 10 | VCC + {C, #} | SHORT | 98% | 179 | אַגענט, אומזיסט, אונדז, געדיכט, געזונט, געלט, װינט, יונג, לופֿט, ליכט, מילך, ריכטן, שולד | הוסטן, נאָנט, פּאָנץ / Examples not covered because second consonant is syllabic: שאָקל, לאָגל, האָקן, גראָשן
+| 11 | V + {m, n, l} + C | SHORT | 96% | 85 | אונטן/אונטער, אַזעלכע, בינדן, ברענגען, גילטן, װאָלװל, װוּנדער, זילבער, עלנט, פֿינף, קאָלנער | באָנדלעך, טשאָלנט
+| 12 | V + C(C)yV | SHORT | 96% | 23 | הוליען, כעמיע, לאָטעריע, ליניע, סטאָליער, סטעליע, פּאַװאָליע, פֿאַמיליע, פֿאַסאָליע, קאָמעדיע, קאַפּעליע, שפּיליען | None!
+| 13 | V + {p, k, f, ts, (t)sh, (d)zh} | SHORT | 94% | 298 | אַװעק, װיפֿל, זיצן, טיש, טרעפֿן, ליפּע (האָלץ), עפֿענען, עפּעס, עק, פֿיש, פּלוצעם, צװישן, צוריק, קאָפּ ,קוקן, רעטשן, שטיק | אָפּ־/אַראָפּ, גאָפּל, האָקן/העקל, העפֿלעך, װאָפֿן*, טיף, ליפּע (נאָמען), מעקלער, נאָפּל, נעפּל, פּיפּס, קלעפּן, רופֿן, רישן זיך, רעפֿטל, שאָף
+| 14 | {i, u} + m | SHORT | 71% | 34 | אומ־/אַרום, זומער, צימעס, צימער, קומען, שטימע | אים, בלום*, גומען, דימע(נ)ט, מומע, רימען (=גאַרטל), (באַ)רימען
+| 15 | {eb, id} | LONG | 93% | 10 | זידן, ליד, לעבלעך, לעבן (≠שטאַרבן), לעבן=נעבן, לעבער, מעבל, פֿידל, צופֿרידן, קלעבן | װידער, (אַ)נידער
+| 16 | Gmc: {e, o} + {g, d, v, z}  ◆ | LONG | 92% | 87 | אָדער (בלוטגעפֿעס), אָװנט, רעגן, באָדן (זיך), בעזעם, האָז, װעג, טאָג, טאָװל, יעדע | אָדער (=צי), באָדן (=דנאָ), דאָזיק, לאָזן, ־לאָז, פֿאָדערן, רעדן
+| 17 | Gmc: ot  ◆ | LONG | 84% | 19 | אָטעם, אַנשטאָט, בראָטן, זאָטל, מאָטלען (=באַרעדן), נאָט, פֿאָטער, פּיפּערנאָטער, קאָטער, שטאָט | (אָנ)באָטן/געבאָט, גאָט, שפּאָט
+| 18 | o ↔ NHG a  ◆◆ | LONG |  |  | אָל, גאָנער, (אױס)גראָבן, (דער) גראָבן, האָבער, האָן, זאָמען, טאָל, טאָלער, (פֿיש)טראָן, יאָמערן, לאָבן, לאָם, (דאָס) מאָל, (באַ)מאָלן, (צע)מאָלן, מאָנען, נאָמען, פּראָלן, (אַ גרױסע) צאָל, (באַ)צאָלן, צאָן, קראָם, ראָב, שאָבן, שאָל, שטאָל, שטראָפֿן, שלאָפֿן, שמאָל, שנאָבל, שפּאָן, שפּיטאָל | אָבער, לאָזן, לאָמפּ, שװאָם, שנאָל [...]
+| 19 | V ↔ NHG V  ◆◆ | SAME |  |  | Short: גריל, דין, דערינען  [...] / Long: בוזעם, בוך, בעטן, גרוסן, מעל, ריב [...] | Short in Yiddish: גוט, גע...יבן,  װידער, זיבן, יענער, ליגן, נידער, נעמען, / Long in Yiddish: גרענעץ, פֿוטער, פֿיטערן, רעטעך [...]
+V = vowel · C = consonant [זש counts as a single consonant] · {indicates choice } · # = root boundary · Gmc = Germanic words only · NHG = New High (=Standard) German · [*] = attested with both lengths · ◆ hard · ◆◆ extra hard
+‹#›
+לאַנג אָדער קורץ?
+=== Slide 5 ===
+Key words and patterns not handled by the rules.
+KEY VERBS
+| Verb | Pattern | SHORT | LONG
+| זײַן | Short in all inflected forms except participle. | איך בין, ער/זי איז, מיר/זײ זענען, איר זענט | געװען
+| האָבן | Short in all inflected forms except infinitive, gerund, and derived noun. | איך האָב, ער/זי/איר האָט, מיר/זײ האָבן | דאָס האָבן, האָבנדיק, דאָס האָב
+| געבן | Short in singular, 1pl and 2pl, long elsewhere. The vowel in SEY variant form גיבן is always short. | איך געב/גיב, ער/זי/איר געט/גיט, אונדז געב׳מיר, זײ געבן, דאָס גיבן... | דאָס געבן, געבנדיק, געגעבן, דער גאָב
+| נעמען | Short in all forms, including participle. | איך נעם, ער/זי נעמט, מיר/זײ נעמען, איר נעמט, גענומען | 
+| ליגן | Short in all forms, except participle געלעגן. However, regional variant participle געליגן is short. | איך ליג, ער/זי/איר ליגט, מיר/זײ ליגן, דאָס ליגן, ליגנדיק, געליגן | געלעגן
+OTHER KEY PATTERNS AND WORDS
+| Pattern | Description | Examples
+| Short perfect stem patterns | Past participles and derived nouns with... / • [o], where infinitive has different vowel ([a, e, i, oy]) / • [i], where infinitive has [ay] / …are short. | געטראָטן/טראָט < טרעטן, געלאָפֿן < לױפֿן, געקװאָלן < קװעלן, געריסן < רײַסן, געשאָסן/שאָס < שיסן, געשטאָרבן < שטאַרבן, געשפּיגן < שפּײַען, געשריבן < שרײַבן
+| Irregular comparative stems | Irregular comparative stems, where the vowels in the comparative and the base are not related via a stem change of [e < o, a] or [i < u], are short. | שענער, קלענער, בעסער, גרעסער
+Unique cases
+לאַנג אָדער קורץ?
+‹#›
+=== Slide 6 ===
+Other unpredictable words
+All remaining words in the companion database whose length no rule predicts, that aren't transparently Slavic, and that don't appear elsewhere in this guide.
+|  | SHORT | LONG
+| [o] | אָט(אָ), באָאַ, גאַרדעראָב, האָניק, װאָל, זאָלן, זשאַרגאָן, טאָמער, טעלעפֿאָן, יאָד, יענאָט, לאָגיק, מאָנאַט, פֿאַגאָט, פֿאָדערשט, פּאַראָל, פּ(אַ)ראָם, פּראָזע, קאָמיש, קנאָבל, ראָזע, ראָל(ע) | אָן (≠ מיט), אָן (אָנגײן, אָנשטעלן), מאָן (פֿילעכץ פֿאַר המן־טאַשן), מאָנ(קאַלב), פּאָליש, קאַטאָװעס
+| [e] | באַלעט, באַלעמער, בילעט, בלעטערן, ברענען, גאַזעט, גלעטן, געזעל(שאַפֿט), געטאָ, דעמאָלט, דען, האָטעל, העט, העל, װעטער, װען, זעמל, טאַבורעט, טאַבעלע, טעלער, טענענבױם, טרעלן, טרענען, עט(װאָס), עטלעך, עלנבױגן, על(ע)ף, עמער, ענטפֿערן, פֿאָטעל, פּאָעט, פּאָעמע, פּלעט, פֿעדערשט, פֿעט, פּען, צװעל(ע)ף, צעטל, ק(אַ)רעל, קאַבינעט, קאַשקעט, קלעטערן, קלעמען, קנעלן, קעמל/קעמען, קרעלן, שװעל, שטעלן, שטעלע, שנעל (=גיך), שנעלן (אין נאָז) | ־על, באַפֿעלן, באַקװעם, בערעלע, ברעט, ברעמען, געל, גענעצן, גערעטעניש, גרעט, װעבן, זעל, טרעטן, יעטװעדער, לענען, לעקעך, עמעצער, פּאַמעלעך, פֿעלער, קנעטן, קעל, קעלער, קעניג, רעטעניש, רעם, שפּעט, שרעטל
+| [u] | און, בלוט, ברונעם, גענוג, גערוך, דול, דונער, דרוקן, טורעם, מוזן, מוטער, מינוט, נומער, פּוד, פּודל, פּוטער, פֿון, קלוג | ברודער, הון, זודיק, זוכן, טוך, פֿוס, פּרוּװן, קוגל, רודערן, שוך, שול, שוסטער, שטוב
+| [i] | איבער, איטלעך, אין, ביז, ביטע, ביטער, ביליק, בילן, ביס (=בראַװאָ), (אַ) ביסן, ברילן (אױגן), געװינען, געװיס, געװיסער (=פֿאַרפֿלײצונג), געפֿינען, געשיכטע, דריט, װיזיט, װיסן, װירקן, זיכער, טיטל (פֿון אַ מענטש), טיטל (=פּאַפּירן בײַטעלע), טריט, ליטע, מיט, מיטל, מיטן, מיכל, מינדל, מינדסט, מיניסטער, מינערן, ני(ש)ט, סיראָפּ, פֿאַראיבל, פֿאַרגינען, פֿאַרגעניגן, פֿאַרטיליקן, פֿיזיש, פֿינ(ע)ף, ציבעלע, ציװיל, ציטערן, ציכטיק, קאַפּיטל, קװיט, קיבעצן, קיטל, קיך, קין, ריכטיק, רינען, שיטן, שיטער, שיסל, שירעם, שליטן, שפּין, שפּינען (פֿאָדעם), שריט | אַהין, ביבער, (אױס)ביטן, בינע, בריװ, גיך, גיסן, געניטן, געניסן, גריװן, גרין, גריסן, (דער) דיך, װיג, זיגן, זינען, זיס, טריב, ־יװ (אַקטיװ, רעלאַטיװ), ליב, ליבע, ליטװינער, מאַשין, ניכטער, פֿאַרדריסן, פּאַריז, פֿיך, פֿליג, פֿליגל, פֿליסן, פּריז, צוליב, ציג, ציך, ציל, קוליס, קיל, קיניג, קריכן, ראַבינער, ריז, שטיגן, שטיװל, שיל, שינבײן, שיסן, שפּיז, שפּילן
+לאַנג אָדער קורץ?
+‹#›
+=== Slide 7 ===
+Dialectal divergence
+Words whose length differs between CY (including HHY) and SEY. Note that dialects are useful constructs, but are not monoliths; these generalizations can be thought of as tendencies, not absolute rules.
+INDIVIDUAL WORDS
+STRESSED PRONOUNS
+| Pronouns | CY | SEY
+| איך*, מיך, זיך, דיך | /iːə/ | /ɛ/
+| ער, דער, װער | /eɪ̯(ə)/ | /ɛ(ɪ̯)/
+| מיר, איר | /iː(ə)/ | /i/
+| דאָס, װאָס | /uː(ə)/ | /u/
+| דו, זי, די, אים | /iː/ | /i/
+| דעם, ע(י)ם | /eɪ̯/ | /ɛɪ̯/
+| אונדז | /ɪ/ | 
+| עץ, ענק | /ɛ/ | n/a
+| Short in CY, long in SEY | 
+| Cases of [ig/ug] | e.g. היג(ער), שװיגער, ציגל, שפּיגל, זיגל, קוגל
+| (ער) טוט, טוטס | But the rest of the verbal paradigm is long
+| קושן | Long vowel quality in SEY may derive from palatalization of initial /k/
+| קישן | 
+| ייִדיש | Only found in parts of CY, particularly HHY; possibly Western Yiddish influence via Oberlander Yiddish?
+| פֿילן ‘to fill’ | But short vowel in the adjective פֿול, and long in the homograph פֿילן ‘to feel’
+*Some parts of SEY (Podolia?) seem to have long /i/ in איך, and some parts of CY have remonophthongized /iːəkh/ as /yɛkh/ and even the famed Warsaw-area /yakh/.
+| Long in CY, short in SEY | 
+| Modern German borrowings | When the German word has a long vowel, it is more likely to be borrowed into CY long, but into SEY short. e.g. פּערזענלעך, סיסטעם, פּראָבלעם, מעטער, קאָלעגע, ־טעט,
+| קריג, קריגן זיך 'war; to fight' | This, despite the tendency for /ig/ to be shorter; possibly under German influence. However, קריגן ‘to receive’ is always short.
+| אױף | For the preposition, SY has short /o/. For the adverb/converb (and derivatives  אַרױף, דערױף): short /o/ is found across SY, while diphthong /ou/ is found in certain parts of CY (e.g. HHY), SEY also regionally has short /i/ (corresponding to NEY /u/).
+| צען, צענט(ל) | 
+| מסתּמא | Variant /mistame/ is also common in CY
+| באָבע | Areas that have באָבע ‘midwife’  and ‘grandmother’ tend to have long in the former and short in the latter
+| בתולה | Possibly under influence of גאולה, גדולה, מגילה, etc.
+| Participles with [-oyrn] in CY
+| While these participles are typically pronounced /-oyrn/ in SY and /-orn/ in NEY (e.g. געבױרן, געיױרן, געפֿרױרן, etc.), some CY variants have /-u:rn/ – the “long” version of the NEY forms.
+לאַנג אָדער קורץ?
+‹#›
+=== Slide 8 ===
+Minimal pairs
+לאַנג אָדער קורץ?
+Words distinguished solely or primarily by vowel length.
+| SHORT | LONG
+| אָדער (=צי) | (די) אָדער
+| (איך) בין | (די) בין
+| (דאָס) בעט | (איך) בעט (אײַך זײער)
+| (דאָס) בעטל | (איך) בעטל
+| (די) בריסט | (דו) בריסט
+| (דעם) געבעטן (שטול) | געבעטן (=תּפֿילות)
+| (הױל און) גאָל | (איך) גאָל
+| געביטן (< בײַטן) | געביטן (=אָנזאָגן; פֿעלדער)
+| (די) געבליטן (=דמים) | (דעם) געבליטן (גאָרטן)
+| געמיטן (< מײַדן) | (די) געמיטן (=געמיטער)
+| געפֿעלט (< געפֿעלן) | געפֿעלט (< פֿעלן)
+| גראָב (=געמײן) | (איך) גראָב
+| (איך) גריבל | גריבל (< גרוב)
+| גרעבער (=מער גראָב) | (דער) גרעבער (גראָבט)
+| דאָ (רע מי) | דאָ (=נישט דאָרט)
+| דאָזיק | דאָס
+| דין (=דאַר) | (איך) דין
+| דינסטן (=דאַרסטן) | דינסטן (=מױדן)
+| דינעם | דינים
+| (מיר, זײ) האָבן | (צו) האָבן
+| (איך) האָב | (דער) האָב
+| האָבער (=אײגנטימער) | האָבער (תּבֿואה)
+| הוט, היט | (איך) היט
+| הילע | הילן
+| הינדל (< הינדע) | הינדל (< הון)
+| SHORT | LONG
+| העקל (< האַק) | העקל (< האָקן)
+| װאָרעם (אין דער ערד) | װאָרעם (=װאָרן, װײַל)
+| אַװעק | װעג
+| װערט (=װירט) | װערט (כּדאַי; > געװאָרן; > זיך געװערט)
+| (די) זון | (דער) זון
+| (די) זעט | (ער) זעט
+| טוט (=פּאַפּירן בײַטל) | (ער) טוט (SEY)
+| (קיניגלעכער) טראָן | (פֿיש)טראָן
+| כּתרילעװקע | כּתריאל
+| ליפּע (האָלץ) | ליפּע (שמעלצער)
+| מאָדנע | מאָדיש
+| מאָל (=נאַכט־באַבעלע) | (דאָס) מאָל
+| מילנער | מיל
+| (דאָס) מיסט | (דו) מיסט (זיך)
+| מעסטן | (זאַלצ)מעסטל
+| נאָך (אַ ביסל) | (דער)נאָך
+| נוס, ניס | (איך) ניס
+| (חודש) ניסן | ניסן (און הוסטן)
+| נעט (ציכטיק) | נעט (< נאָט)
+| נעמען (< גענומען) | נעמען (< נאָמען)
+| (שטעל זיך) פֿאָר (SEY) | (איך) פֿאָר
+| פֿאָרט (=דאָך) | (ער) פֿאָרט
+| פֿאַרריסן (די נאָז) | פֿאַרריסט (=פֿאַרסאַזשעט)
+| SHORT | LONG
+| פֿול | פֿיל (שפּיר; אַ סך)
+| פֿערד (=פֿערט) | (דאָס) פֿערד
+| פֿעדערן (זיך אין דער פֿרי) | פֿעדערן (פֿון אַ פֿױגל)
+| פֿעטער (און מומע) | אַלט־פֿעטעריש (< פֿאָטער)
+| פֿילץ | (עץ) פֿילטס (זיך גוט)
+| (די) פֿעל | (איך) פֿעל
+| פֿענדל (< פֿאַן) | פֿענדל (< פֿאָן)
+| צאָל (=אינטש) | צאָל (=סכום; באַצאָל)
+| ציקעלע (=ציגעלע) | ציגעלע
+| (איך) קאָן | (שטעלן אין) קאָן
+| קװעלן (פֿון נחת) | קװעלן (=מאַטערן)
+| קיכל (= קלײנע קיך) | קיכל (= קלײנער קוכן)
+| קלעפּ (< קלאַפּ) | קלעפּ (< קלעפּן)
+| קריגן (> געקראָגן) | קרוגן
+| רוט (=שטעקן) | (ער) רוט
+| רוס (אין רוסלאַנד) | רוס (=סאַזשע)
+| רעדער (פֿון אַ שפּראַך) | רעדער (< ראָד)
+| שטיל(ערהײט) | שטול
+| (איך) שטיף | שטיפֿ(מאַמע)
+| (דער) שליסל | (איך) שליס
+| שמען (=האָבן אַ שם) | שעמען
+| (ער) שפּעט | שפּעט (בײַ נאַכט)
+| תּנאָים (=פֿאַרקנסונג) | תּנאָים (=באַדינגונגען)
+‹#›
