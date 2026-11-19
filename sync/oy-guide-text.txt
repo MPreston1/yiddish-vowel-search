@@ -1,0 +1,77 @@
+=== Slide 1 ===
+“Cholam” vowel: exceptions
+While the rule regarding the “stressed cholam in an open syllable” holds true in most cases, there are some exceptions:
+[More common] Words with a stressed cholam in a closed syllable that nevertheless follow the Group 2 dialectal pattern. These items typically belong to a younger stratum of the Semitic component, i.e. borrowed more recently or ad-hoc into Yiddish, especially in the learned register. Examples: הוד, הון, המון, חובֿ, חול, לכבֿוד.
+[Rare] Words with a stressed cholam in an open syllable that are nevertheless  pronounced “o” in all dialects. These words typically belong to the more ancient stratum the Semitic component. Example: יוסף.
+Germanic:
+אױב, אױג, אױפּס, באַפֿױלן, בױגן, בױם, בױמל, בלױז, ברױט, גױדער, גלױבן, געפֿלױגן, געצױגן, גרױס, הױך [נישט נידעריק], הױז(ן) [מלבוש פֿאַר די פֿיס], הױל, הױף, הױקער, װױל, װױנען, זױל, זױם [ברעג, עק], טױגן, טױט, טױפֿן, טױב [אױף אײן אױער], לױבן, לױג, לױז [נישט פֿעסט], לױן, לױפֿן, נױט, עלנבױגן, פֿאַרהױלן, פֿױגל, פּױלן, פּױפּס, פֿלױ, צױט, קאַפּױער, קױט, קױלן [ברענװאַרג], קױפֿן, קלױסטער, קרױן, רױ, רױז, רױט, שױט, שױס, שטױב, שטרױ, שרױט
+Slavic:
+דרױב, סטױג, פּױזען, פּלױט, קױלען, קױמען, קױש
+Hebrew:
+דורות, כּוח, כּותל, מוהל, משה, סודות, סוחר, קטורת, שומר, שלמה, שׂונא, תּורה
+“U4” vowel
+• NEY: Lithuania /oy/, Belarus /uy/, rarely and in certain words /u/  || SEY: /oy/, or in Podolia & Bessarabia /u/* | CY: Polish /ɔ:/ or /ɔə/, Carpathian /ou/
+• Vowel changes (e.g. in diminutive and plural) have ײַ rather than ײ
+• Mostly derived from MHG ū. In M. Weinreich’s system, this vowel is dubbed “U4”
+* The /u/ vowel predominated in Podolia/ Bessarabia, and seems to have been retreating to /oy/ already in the early 20th century. Depending on the speaker and particular town, more or fewer words had the vowel.
+** This, despite the diminutive מײדל and plural variant מײדן. There is also a variant singular מאַד.
+*** Variant of קלײַבן found mainly in CY and SEY
+אױס/אַרױס, בױד, בױך, ברױכן, ברױן, גדױל [אַ מין באַר], גרױל, גרױפּ, הױז [שטוב], הױב, הױט, הױערן, הױפֿן [זשמעניע, בערגל], זױבער, זױפֿן, טױב [פֿליט אין הימל], טױ, טױז, טױזנט, (װײַנ)טרױב, טױשן, יױך, לױז [קריכט אין די האָר], לױט [נאָך, װעדליק, כּפֿי], לױטער, לױצק [שטאָט אין פּױלן], מױד**, מױז, מױל, פּױק, פּלױדערן, פּלױשן, פֿױל, פֿױסט, פֿרױ, צױג, צױזמיר [שטאָט אין פּױלן], קױל [פֿון אַ ביקס], קױקלען, קלױבן***, קלױז, (האָר)קרױז, קרױט, רױבן, רױשן, שױב, שױדערן, שטרױכלען, שטרױס, שרױף
+באַדױערן, בױען, געדױערן, געטרױען, זױער, טרױער(יק), מױער, פּױער
+“U4” vowel + r/w
+• Same as Group 1, but SEY has widespread /ov/: badovern, boven, zover, etc.
+• Derived from MHG ūr/ūw
+גערױם, זױמען* [זריעה], (פֿאַר)זוימען [פֿאַרשפּעטיקן], מילגרױם, פֿלױם*, צױם, קױם, (אױפֿ)רױמען [צוקלײַבן], (אײַנ)רױמען [אַ סוד אין אױער], שױם
+“U4” vowel + m
+• NEY: often /a/*, otherwise Lithuania /oy/, Belarus /uy/ || SEY: /o/ || CY: Polish /ɔ:/, esp. Carpathian /ou/
+• Derived from MHG ūm
+* The /a/ vowel is not found in זױמען ‘seed’ or פֿלױם ‘plum’.
+Group 1: NEY “oy/uy” vs. SY “ou” (near-exhaustive; this is the most important group to memorize!)
+Group 2: NEY “ey” vs. SY “oy”
+“Cholam” vowel
+Includes:
+1. Virtually all other words spelled with ױ, so YOU DON’T NEED TO MEMORIZE THIS SET.  These primarily derive from ou or ō in MHG, but contain a smaller number of borrowings from Slavic. Vowel changes (e.g. in diminutive and plural) have ײ rather than  ײַ.
+2. All words from the Semitic component that contain a stressed cholam in an open syllable (open = not capped by a consonant).  Thus, the plurals דורות and סודות fall into this category, while their singulars דור and סוד do not (they have “o” universally). See exceptions below.
+Group 4: (Near-)universal “oy”
+Group 3: NEY “oy” from hiatus repair
+“Cholam” vowel + r (in NEY)
+אױער is often pronounced as ever or eyver, and טױער as tever – though ey is common too.
+Past participles with ־ױרן are typically pronounced (and often written, too) as ־אָרן instead: געבױרן becomes געבאָרן, etc. Same goes for פֿאַרלױרן,  געשױרן,  געשװױרן, and געפֿרױרן. However, pronunciation with ey exists as well.
+Borrowings
+Words where source language either has “oy” – or “ou”/”au” that was nativized* into Yiddish as “oy”.
+• To facilitate pronouncing the vowe sequence /o+e/, NEY frequently inserts /y/: הנאה /hanoye/, גאָון /goyen/, טעות /toyes/, נאָענט /noyent/, בלאָע /bloye/, גראָע /groye/, etc.
+• In the last two cases, the “oy” has even been generalized to the base form and explicitly written with ױ, giving בלױ and גרױ.
+• For the non-Semitic words, SEY often repairs the hiatus by inserting /v/: נאָװנט /nuvnt/, גראָװ /gruv/, etc. In parts of both NEY and SEY, טעות features something similar: toves or tuves, respectively.
+Slavic:
+בױנע, דױנע, הױדען, װױט, װױען, סטרױען, סלױ, פּױען, רױען זיך
+German:
+אַנטױשן, גרױזאַם, הױך** [אָטעם], טױכן, טרױם**, פּױזע**, שטױנען**
+English and internationalisms:
+בױ(טשיק), טױטאָלאָגיע, סױע, סקױט, קױזאַליטעט
+* While oyf is not the prescribed form, it has long been an interdialectal / literary form and was widely  in use in Yiddish schools and among Yiddishists since at least the mid 20th century and probably
+| Notes | CY | SEY | NEY | Klal | 
+|  | oy |  |  |  | אױ
+|  | o:kh/oukh | oykh, e(y)kh | eykh |  | אױך
+|  | of |  | af | af, oyf* | אױף (פּרעפּאָזיציע)
+| Also אַרױף | of, ouf | if, of | uf | uf, oyf* | אױפֿ… (קאָנװערב)
+|  | ouf | oyf | eyf | oyf | צונױפֿ…
+|  | mɔ:d, moyd | moyd | moyd | moyd | מױד
+|  | gɔ:/gou, goy | goy | goy | goy | גוי
+| Colloquially oto-; in former Soviet areas, avto- |  |  |  | oyto | אױטאָ…/אָטאָ…
+Group 5: Irregular words
+“Oy!”: a self-directed guide to the ױ vowel for dialect-aspirers
+compiled by Arele Schaechter Viswanath
+| Group 1 (“U4”) | Meaning | Group 2 (“cholam”) | Meaning
+| דאָס מױל | mouth | דער מוהל | mohel
+| די טױב | dove, pigeon | טױב | deaf
+| לױט | according to | דער לױט | measure (½ oz.)
+| די הױב | hood | געהױבן | lifted
+| די קױל | bullet, ball | די קױלן | קױלען | coals | to slaughter
+| טױשן | to (ex)change | אַנטױשן | to disappoint
+| דער הױפֿן | pile, bunch | דער הױף | courtyard
+| דאָס הױז | house | דער הױז; די הױזן | pant leg; pants
+| די לױז | louse | לױז | loose
+Appendix: Minimal (and Near-Minimal) Pairs
+The vowel spelled with ױ in Yiddish is pronounced, in Standard Yiddish, as “oy”. However, in reality, ױ represents two distinct vowels whose pronunciation differs by dialect. Those wishing to speak with a particular dialect can use this guide to learn which is which. Critically, this is the only major phonetic detail that sets apart Standard Yiddish vowels from NEY (Northeastern, or “Litvish” Yiddish) Yiddish; CY (Central, or “Polish”) and SEY (Southeastern, or “Ukrainian”) further involve vowel length, covered here.
+* However, if modern Hungarian Hasidic use ױ to spell modern English words with the “ou” sound, the intended pronunciation is not “oy”; the ױ is natural due to the “ou” sound ױ makes in words from Group 1.
+** Speakers from regions in the German cultural sphere, including Hungarian/Unterland, may pronounce German borrowings such as these with /ou/.
