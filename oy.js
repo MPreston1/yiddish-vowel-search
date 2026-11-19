@@ -5,7 +5,7 @@
         DIALS = [['Klal', 'Klal (Standard)'], ['NEY', 'NEY (Northeastern)'], ['CY', 'CY (Central)'], ['SEY', 'SEY (Southeastern)']];
     const root = document.getElementById('app-o'), $ = id => document.getElementById('o-' + id);
 
-    const {el, norm, fetchSheet, modal, saveJSON} = Shared;
+    const {el, norm, addKeys, fetchSheet, modal, saveJSON, rankMatches, showMore} = Shared;
     const {get: idbGet, set: idbSet} = kv('oy-lookup');
 
 // ---- parsing
@@ -25,9 +25,7 @@
         return T.rows.filter(r => (r[ix.word] || '').trim()).map(r => {
             const o = {};
             keys.forEach(k => o[k] = ix[k] >= 0 ? (r[ix[k]] || '').trim() : '');
-            o.nw = norm(o.word);
-            o.ng = norm(o.gloss);
-            return o
+            return addKeys(o)
         })
     }
 
@@ -125,24 +123,8 @@
             $('more').hidden = true;
             return
         }
-        const latin = /[a-z]/i.test(raw), m = [];
-        for (const w of words) {
-            let best = -1, len = 0;
-            const tryKey = s => {
-                if (!s) return;
-                const p = s.indexOf(q);
-                if (p < 0) return;
-                const sc = s === q ? 0 : p === 0 ? 1 : 2;
-                if (best < 0 || sc < best) {
-                    best = sc;
-                    len = s.length
-                }
-            };
-            if (latin) tryKey(w.ng); else tryKey(w.nw);
-            if (best >= 0) m.push([best, len, w])
-        }
-        m.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-        matches = m.map(x => x[2]);
+        const latin = /[a-z]/i.test(raw);
+        matches = rankMatches(words, q, w => latin ? w.ng : w.nw);
         shown = 0;
         R.innerHTML = '';
         if (!matches.length) {
@@ -154,12 +136,7 @@
     }
 
     function more() {
-        const f = document.createDocumentFragment();
-        for (const w of matches.slice(shown, shown + PAGE)) f.append(card(w));
-        shown = Math.min(shown + PAGE, matches.length);
-        $('results').append(f);
-        $('more').hidden = shown >= matches.length;
-        $('more').textContent = `Show more (${matches.length - shown} left)`
+        shown = showMore($('results'), $('more'), matches, shown, PAGE, card)
     }
 
     function noMatch(raw, q) {
@@ -354,14 +331,13 @@
 
 
     // ---- export / import
-    $('exp').onclick = () => {
+    $('exp').onclick = async () => {
         if (!words.length) {
             setStatus('Nothing to export yet.');
             return
         }
         const data = {app: 'oy-search', version: 1, exported: new Date().toISOString(), words, rules, pairs};
-        saveJSON(`oy-search-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data));
-        setStatus(`Exported ${words.length} words.`)
+        if (await saveJSON(`oy-search-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data), true)) setStatus(`Exported ${words.length} words.`)
     };
     $('imp').onclick = () => $('impfile').click();
     $('impfile').onchange = async e => {
@@ -371,7 +347,7 @@
         try {
             const j = JSON.parse(await f.text());
             if (j.app !== 'oy-search' || !Array.isArray(j.words) || !j.words.every(w => w && typeof w.word === 'string') || !Array.isArray(j.rules) || !j.pairs || !Array.isArray(j.pairs.rows)) throw new Error('not an Oy Search export');
-            words = j.words.map(w => ({...w, nw: norm(w.word), ng: norm(w.gloss || '')}));
+            words = j.words.map(w => addKeys({...w}));
             rules = j.rules;
             pairs = {head: j.pairs.head || [], rows: j.pairs.rows};
             try {

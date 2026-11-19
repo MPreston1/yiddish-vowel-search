@@ -7,7 +7,7 @@
     const root = document.getElementById('app-l'), $ = id => document.getElementById('l-' + id);
 
 
-    const {el, norm, modal, saveJSON} = Shared, build = Rules.buildRows;   // Database parsing lives in rules.js
+    const {el, norm, addKeys, modal, saveJSON, rankMatches, showMore} = Shared, build = Rules.buildRows;   // Database parsing lives in rules.js
 
     // After data finishes loading: redraw whatever is on screen without throwing the user out of the rule finder.
     function refresh() {
@@ -94,16 +94,7 @@
             $('more').hidden = true;
             return
         }
-        const m = [];
-        for (const r of rows) {
-            const s = latin ? r.ng : rowKey(r);
-            if (!s) continue;
-            const p = latin ? s.indexOf(q) : findAt(s, q);
-            if (p < 0) continue;
-            m.push([s === q ? 0 : p === 0 ? 1 : 2, s.length, r])
-        }
-        m.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-        matches = m.map(x => x[2]);
+        matches = rankMatches(rows, q, r => latin ? r.ng : rowKey(r), latin ? null : findAt);
         shown = 0;
         $('results').innerHTML = '';
         if (!matches.length) {
@@ -117,12 +108,7 @@
     }
 
     function more() {
-        const frag = document.createDocumentFragment();
-        for (const r of matches.slice(shown, shown + PAGE)) frag.append(card(r));
-        shown = Math.min(shown + PAGE, matches.length);
-        $('results').append(frag);
-        $('more').hidden = shown >= matches.length;
-        $('more').textContent = `Show more (${matches.length - shown} left)`;
+        shown = showMore($('results'), $('more'), matches, shown, PAGE, card)
     }
 
     function card(r) {
@@ -942,7 +928,7 @@
             const what = [okSheet ? `${j.sheet.rows.length} entries` : '', okSlide ? 'the slide tables and footnotes' : '', okRules ? `${j.rules.rules.length} rules` : ''].filter(Boolean).join(' and ');
             if (!confirm(`Replace the saved data with ${what} from this file?`)) return;
             if (okSheet) {
-                rows = j.sheet.rows.map(r => ({...r, nw: norm(r.word), ng: norm(r.gloss || '')}));
+                rows = j.sheet.rows.map(r => addKeys({...r}));
                 sheetAt = j.sheet.at || Date.now();
                 await idbSet(CACHE_KEY, {at: sheetAt, rows});
                 setStatus(`${rows.length} entries (imported)`);

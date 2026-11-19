@@ -110,18 +110,52 @@ const Shared = (() => {
         return box
     }
 
+    // Adds the search keys nw (word) and ng (gloss) to a row, with all vowel and letter marks removed; returns the row.
+    function addKeys(r) {
+        r.nw = norm(r.word);
+        r.ng = norm(r.gloss);
+        return r
+    }
+
+    // Search results: the items whose key contains q, best first (exact match, then starts with q, then contains q; shorter keys first).
+    // keyOf(item) gives the text to look in; find(key, q) can replace the default indexOf.
+    function rankMatches(items, q, keyOf, find) {
+        const m = [];
+        for (const it of items) {
+            const s = keyOf(it);
+            if (!s) continue;
+            const p = find ? find(s, q) : s.indexOf(q);
+            if (p < 0) continue;
+            m.push([s === q ? 0 : p === 0 ? 1 : 2, s.length, it])
+        }
+        m.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+        return m.map(x => x[2])
+    }
+
+    // Shows the next page of results (cards for items[shown .. shown+page)) and updates the "Show more" button.
+    // Returns the new number of items shown.
+    function showMore(results, moreBtn, items, shown, page, card) {
+        const frag = document.createDocumentFragment();
+        for (const x of items.slice(shown, shown + page)) frag.append(card(x));
+        shown = Math.min(shown + page, items.length);
+        results.append(frag);
+        moreBtn.hidden = shown >= items.length;
+        moreBtn.textContent = `Show more (${items.length - shown} left)`;
+        return shown
+    }
+
     // Saves text as a .json file. With share=true, tries the phone's share sheet first (Save to Files, AirDrop, ...);
-    // otherwise, or if sharing is not available, it downloads the file.
+    // otherwise, or if sharing is not available, it downloads the file. Returns false if the person cancelled the share sheet.
     async function saveJSON(name, text, share) {
         const file = new File([text], name, {type: 'application/json'});
         if (share) {
             try {
                 if (navigator.canShare && navigator.canShare({files: [file]})) {
                     await navigator.share({files: [file]});
-                    return
+                    return true
                 }
             } catch (e) {
-                if (e.name === 'AbortError') return
+                if (e.name === 'AbortError') return false
             }
         }
         const a = document.createElement('a');
@@ -130,10 +164,11 @@ const Shared = (() => {
         document.body.append(a);
         a.click();
         a.remove();
-        setTimeout(() => URL.revokeObjectURL(a.href), 10000)
+        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+        return true
     }
 
-    return {el, norm, fetchSheet, modal, saveJSON}
+    return {el, norm, addKeys, rankMatches, showMore, fetchSheet, modal, saveJSON}
 })();
 
 // ---- Yiddish typing mode (Yiddish Klal layout), shared by both tools: type ~ to toggle, ~~ for a literal ~

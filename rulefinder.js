@@ -2,6 +2,7 @@
 // Works in the browser (window.RuleFinder) and in Node (module.exports).
 (function (root) {
     const PAS = '\u05B7', KOM = '\u05B8', HIRIQ = '\u05B4';
+    const DENTAL = ['ד', 'ט', 'נ', 'ל'];
     const FINAL = {'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ'};
     const PKF = ['פ', 'ק', 'צ', 'טש', 'ש', 'דזש', 'זש'];
 
@@ -182,11 +183,11 @@
             c.cons.length === 0 ? `no consonant after the vowel; next comes ${endTxt}` : `the consonant ${f} follows the vowel`);
         add('{e, o} + {s, kh}', c.eo && ['ס', 'כ', 'ח'].includes(c.first),
             !c.eo ? `the vowel ${vl} is not ע or אָ` : ['ס', 'כ', 'ח'].includes(c.first) ? `${vl} is followed by ${f}` : `${vl} is followed by ${f}, not ס or כ`);
-        add('or + {dental, V, #}', c.v === 'o' && c.first === 'ר' && (c.cons.length === 1 || ['ד', 'ט', 'נ', 'ל'].includes(c.cons[1])),
+        add('or + {dental, V, #}', c.v === 'o' && c.first === 'ר' && (c.cons.length === 1 || DENTAL.includes(c.cons[1])),
             c.v !== 'o' ? `the vowel ${vl} is not אָ` : c.first !== 'ר' ? `אָ is followed by ${f}, not ר` : c.cons.length === 1 ? `אָר followed by ${endTxt}` : `אָר followed by ${c.cons[1]}`);
         add('Vr + #', ['u', 'i', 'e'].includes(c.v) && c.first === 'ר' && c.cons.length === 1 && c.atEnd,
             c.first !== 'ר' ? `the vowel is followed by ${f}, not ר` : !['u', 'i', 'e'].includes(c.v) ? `the vowel ${vl} is not ו, י or ע` : c.cons.length !== 1 ? `ר is followed by another consonant (${c.cons[1]})` : !c.atEnd ? 'ר is followed by a vowel, not the end of the word' : `${vl} + ר + end of the word`);
-        add('er + {dental, V}', c.v === 'e' && c.first === 'ר' && ((c.cons.length === 1 && c.nextV) || ['ד', 'ט', 'נ', 'ל'].includes(c.cons[1])),
+        add('er + {dental, V}', c.v === 'e' && c.first === 'ר' && ((c.cons.length === 1 && c.nextV) || DENTAL.includes(c.cons[1])),
             c.v !== 'e' ? `the vowel ${vl} is not ע` : c.first !== 'ר' ? `ע is followed by ${f}, not ר` : c.cons.length === 1 ? `ער followed by ${endTxt}` : `ער followed by ${c.cons[1]}`);
         add('Vr + C', c.first === 'ר' && c.cons.length >= 2,
             c.first !== 'ר' ? `the vowel is followed by ${f}, not ר` : c.cons.length < 2 ? `ר is followed by ${endTxt}, not a consonant` : `ר followed by the consonant ${c.cons[1]}`);

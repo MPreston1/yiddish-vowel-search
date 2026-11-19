@@ -9,7 +9,7 @@ const Rules = (function () {
     const PPTX_URL = 'data/guide.pptx', OLD_PPTX_URL = 'guide.pptx';   // the old place is only tried if the new one is missing
     const PLACE_URL = 'https://yivo.org/yiddishland-topo';
 
-    const {el, norm, modal} = Shared;   // small helpers shared with both tools (shared.js)
+    const {el, norm, addKeys, modal} = Shared;   // small helpers shared with both tools (shared.js)
     const loose = s => (s || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 
     // ---- Database tab ----
@@ -49,9 +49,7 @@ const Rules = (function () {
                 const v = (r[i] || '').trim();
                 if (v) o.sounds.push([(t[0][i] || '').trim(), v])
             }
-            o.nw = norm(o.word);
-            o.ng = norm(o.gloss);
-            return o
+            return addKeys(o)
         })
     }
 
@@ -245,7 +243,6 @@ const Rules = (function () {
 
     // ---- Order of the guided questions ----
     const isLK = r => /^loshn-koydesh$/i.test(r.b || '');
-    const plain = ps => ps.map(p => p.r.map(x => x.t).join('')).join('\n').trim();
 
     // The slide rules that are asked in the guided questions, shaped like Rules-tab entries (b, c, d) plus srule, q, names.
     function slideItems(srules) {
@@ -253,7 +250,7 @@ const Rules = (function () {
         for (const spec of SLIDE_RULES.filter(s => s.seq).sort((a, b) => a.seq - b.seq)) {
             const sr = (srules || []).find(r => r.title === spec.title);
             if (!sr) continue;
-            const c = spec.desc || (sr.parts[0] ? plain(sr.parts[0].paras) : '');
+            const c = spec.desc || (sr.parts[0] ? textOf(sr.parts[0].paras) : '');
             out.push({b: sr.title, c, d: spec.outcome || '', srule: sr, q: spec.q, names: spec.names})
         }
         return out
@@ -267,7 +264,7 @@ const Rules = (function () {
         const sr = (srules || []).find(r => r.title === 'Select verbs'), out = [];
         if (!sr) return out;
         for (const part of sr.parts) {
-            const verb = part.paras[0] ? plain([part.paras[0]]) : '';
+            const verb = part.paras[0] ? textOf([part.paras[0]]) : '';
             for (const p of part.paras) {
                 const m = /^(Short|Long):\s*([\s\S]*)$/.exec(p.r.map(x => x.t).join(''));
                 if (!m) continue;
@@ -300,7 +297,7 @@ const Rules = (function () {
         if (!sr || !k) return null;
         const part = sr.parts.find(p => /^examples?$/i.test(p.label)) || sr.parts[1];
         if (!part) return null;
-        for (const ex of plain(part.paras).split(/[,;\n]/).map(x => x.trim()).filter(Boolean))
+        for (const ex of textOf(part.paras).split(/[,;\n]/).map(x => x.trim()).filter(Boolean))
             if (norm(ex) === k) return {example: ex, how: 'is one of the comparatives listed in the guide'};
         return null
     }
@@ -312,7 +309,7 @@ const Rules = (function () {
         if (!sr || !k) return null;
         const part = sr.parts.find(p => /^examples?$/i.test(p.label)) || sr.parts[1];
         if (!part) return null;
-        for (const item of plain(part.paras).split(/[,;\n]/)) {
+        for (const item of textOf(part.paras).split(/[,;\n]/)) {
             const [forms, inf] = item.split('<').map(x => x.trim());
             if (!forms || !inf) continue;
             for (const f of forms.split('/')) if (norm(f) === k) return {
