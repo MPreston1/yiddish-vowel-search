@@ -68,7 +68,8 @@
 
     // Search key for Yiddish words: keeps the vowel marks and letter marks (פּ vs פֿ, ב vs בּ vs בֿ, ש vs שׂ, אַ vs אָ),
     // but treats the ligatures as their spelled-out letters (װ = וו, ױ = וי, ײ = יי). Punctuation and spaces are ignored.
-    const searchKey = s => (s || '').normalize('NFD').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, '');
+    // The one exception: וּ (shuruk) counts as ו, and יִ (hiriq) counts as י.
+    const searchKey = s => (s || '').normalize('NFD').replace(/(ו)\u05BC/g, '$1').replace(/(י)\u05B4/g, '$1').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, '');
     const keyCache = new WeakMap();   // row -> its search key, computed once
     const rowKey = r => {
         let k = keyCache.get(r);
@@ -631,7 +632,6 @@
 // ---- Semi-automated rule finder (only for words that are not loshn-koydesh); the engine is in rulefinder.js ----
 // Guesses the stressed syllable, answers every question it can from the spelling, and shows each answer.
     const afNorm = s => (s || '').replace(/\s+/g, ' ').replace(/\//g, '').trim().toLowerCase();
-    const afKey = s => (s || '').normalize('NFD').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, '');
     const afSame = (rule, dbName) => afNorm(rule.b) === afNorm(dbName) || !!(rule.names && rule.names.some(n => Rules.loose(n) === Rules.loose(dbName)));
     const afLen = s => {
         const m = /^(short|long)/i.exec(s || '');
@@ -862,7 +862,7 @@
         }
         out.append(res);
         // 4. comparison with the Database: exact matches only (vowel points included; ligature spelling, hyphens and spaces ignored)
-        const key = afKey(word), hits = key ? rows.filter(r => afKey(r.word) === key) : [];
+        const key = searchKey(word), hits = key ? rows.filter(r => searchKey(r.word) === key) : [];
         if (hits.length) {
             out.append(el('h2', null, 'Compare with the Database'));
             out.append(el('p', 'wmut', hits.length > 1 ? `${hits.length} Database entries match this word exactly. Check which one you mean.` : '1 Database entry matches this word exactly.'));

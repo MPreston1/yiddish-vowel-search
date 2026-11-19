@@ -1,7 +1,7 @@
 // Experimental: guess the stressed syllable and the applicable rule from a word's spelling.
 // Works in the browser (window.RuleFinder) and in Node (module.exports).
 (function (root) {
-    const PAS = '\u05B7', KOM = '\u05B8';
+    const PAS = '\u05B7', KOM = '\u05B8', HIRIQ = '\u05B4';
     const FINAL = {'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ'};
     const DENTAL = ['ד', 'ט', 'נ', 'ל'];
     const PKF = ['פ', 'ק', 'צ', 'טש', 'ש', 'דזש', 'זש'];
@@ -24,7 +24,8 @@
     function units(word, opts) {
         const T = tokens(word), out = [];
         const has = (t, c) => t && t.m.includes(c);
-        const nucleusStart = t => t && (t.l === 'ע' || (t.l === 'א' && (has(t, PAS) || has(t, KOM))) || t.l === 'ו' || t.l === 'ײ' || t.l === 'ױ');
+        // a י with hiriq (יִ) is always the vowel i, so a י right before it is a consonant (ייִ = consonant י + vowel יִ)
+        const nucleusStart = t => t && ((t.l === 'י' && has(t, HIRIQ)) || t.l === 'ע' || (t.l === 'א' && (has(t, PAS) || has(t, KOM))) || t.l === 'ו' || t.l === 'ײ' || t.l === 'ױ');
         let carry = '';
         for (let i = 0; i < T.length; i++) {
             const t = T[i], n = T[i + 1], n2 = T[i + 2], L = t.l, a = i;
@@ -32,7 +33,8 @@
             if (L === 'א' && has(t, KOM)) u = {t: 'V', v: 'o'};
             else if (L === 'א' && has(t, PAS)) u = {t: 'V', v: 'a'};
             else if (L === 'ײ') u = {t: 'V', v: has(t, PAS) ? 'ay' : 'ey'};
-            else if (L === 'י' && n && n.l === 'י') {
+            else if (L === 'י' && has(t, HIRIQ)) u = {t: 'V', v: 'i'};
+            else if (L === 'י' && n && n.l === 'י' && !has(n, HIRIQ)) {
                 u = {t: 'V', v: has(n, PAS) ? 'ay' : 'ey'};
                 i++;
             } else if (L === 'ױ') u = {t: 'V', v: 'oy'};
@@ -40,7 +42,7 @@
             else if (L === 'ו' && n && n.l === 'ו') {
                 u = {t: 'C', c: 'װ'};
                 i++;
-            } else if (L === 'ו' && n && n.l === 'י' && !nucleusStart(n2)) {
+            } else if (L === 'ו' && n && n.l === 'י' && !has(n, HIRIQ) && !nucleusStart(n2)) {
                 u = {t: 'V', v: 'oy'};
                 i++;
             } else if (L === 'ע') u = {t: 'V', v: 'e'};
