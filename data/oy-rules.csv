@@ -1,0 +1,15 @@
+Code,Rule,Applies when,Pronunciation
+,Dialect legend,Klal = Standard Yiddish. NEY = Northeastern (“Litvish”). CY = Central (“Polish”). SEY = Southeastern (“Ukrainian”). SY = CY + SEY. MHG = Middle High German.,"The vowel spelled וי is “oy” in Klal, but really stands for two vowels whose pronunciation differs by dialect."
+1,Group 1: U4 vowel,"Mostly from MHG ū (Weinreich’s “U4”). Near-exhaustive list; the most important group to memorize. Umlauted forms (diminutive, plural) have ײַ rather than ײ.","Klal: oy. NEY: Lithuania oy, Belarus uy, rarely and in certain words u. SEY: oy or (in Podolia and Bessarabia) u (retreating to oy by the early 20th century). CY: Polish ɔ: or ɔə, Carpathian ou."
+1m,Group 1: U4 vowel + m,Derived from MHG ūm.,"Klal: oy. NEY: often a (not in זוימען, פֿלוים), otherwise Lithuania oy, Belarus uy. SEY: o. CY: Polish ɔ:, esp. Hungarian ou."
+1rw,Group 1: U4 vowel + r/w,Derived from MHG ūr/ūw.,"Klal: oy. NEY: as Group 1. SEY: ov is widespread (badovern, boven, zover, etc.), otherwise as Group 1. CY: as Group 1."
+2,Group 2: “cholam” vowel,"Virtually all other words spelled with וי, so this set need not be memorized. Mostly from MHG ou or ō, plus some Slavic borrowings. Umlauted forms have ײ rather than ײַ. Also: Semitic-component words with a stressed cholam in an open syllable (plurals דורות, סודות; singulars דור, סוד keep o universally).",Klal: oy. NEY: ey. SY: oy.
+2r-ev,"Group 2: ""cholam"" + r: NEY ev/eyv","In NEY, some words that contain ױער are pronounced ever or eyver.","Klal: oy. NEY: ever or eyver or eyer (e.g., אױער and טױער). SEY: see other groups. CY: see other groups"
+2r-part,"Group 2: ""cholam"" + r: past participles","In NEY, past participles ending with ־ױרן are often pronounced (and written) as ־אָרן.","Klal: oyrn. NEY: orn, but pronunciation as eyrn also exists. SEY: see other groups. CY: see other groups."
+2x,Group 2 exception: closed syllable,Stressed cholam in a closed syllable that nevertheless follows Group 2. Typically a younger or learned layer of the Semitic component.,Klal: oy. NEY: ey. SY: oy.
+2o,Group 2 exception: open syllable with o,Stressed cholam in an open syllable that is nevertheless o in all dialects. Typically the most ancient layer of the Semitic component.,o in all dialects.
+3,Group 3: NEY “oy” from hiatus repair,"To faciliate pronouncing the vowel sequence /o+e/, NEY frequently inserts /y/.  For the non-Semitic words, SEY often repairs the hiatus by inserting /v/.","NEY: often oye (e.g., הנאה /hanoye/, גאָון /goyen/, טעות /toyes/, נאָענט /noyent/, בלאָע /bloye/, גראָע /groye/)
+
+SEY: often ove (e.g., נאָװנט /nuvnt/, טעות /tuves/)"
+4,Group 4: (near-)universal oy,"Borrowings whose source language has oy, or ou/au nativized as oy.",oy in all dialects. Speakers from German-influenced regions (incl. Hungary/Unterland) may say ou in German borrowings.
+5,Group 5: irregular words,Words with their own pattern in each dialect.,See the per-dialect columns on the word’s card.
