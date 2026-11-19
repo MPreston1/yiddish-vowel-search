@@ -7,7 +7,7 @@
     const root = document.getElementById('app-l'), $ = id => document.getElementById('l-' + id);
 
 
-    const {norm} = Rules, build = Rules.buildRows;   // Database parsing lives in rules.js, shared with experimental.html
+    const {el, norm, modal, saveJSON} = Shared, build = Rules.buildRows;   // Database parsing lives in rules.js
 
     // After data finishes loading: redraw whatever is on screen without throwing the user out of the rule finder.
     function refresh() {
@@ -125,13 +125,6 @@
         $('more').textContent = `Show more (${matches.length - shown} left)`;
     }
 
-    function el(tag, cls, txt) {
-        const e = document.createElement(tag);
-        if (cls) e.className = cls;
-        if (txt != null) e.textContent = txt;
-        return e
-    }
-
     function card(r) {
         const c = el('article', 'card'), w = el('h2', 'word', r.word);
         w.lang = 'yi';
@@ -177,29 +170,12 @@
 
 // "What is vowel length?" pop-up, opened from the words "Vowel Length" in the title; text comes from the first slide of guide.pptx
     function showIntro() {
-        const ov = el('div', 'ov'), box = el('div', 'modal'), h = el('h3', null, 'What is vowel length?');
-        const x = el('button', 'x', '×');
-        x.type = 'button';
-        x.setAttribute('aria-label', 'Close');
-        const esc = e => {
-            if (e.key === 'Escape') close()
-        }, close = () => {
-            ov.remove();
-            document.removeEventListener('keydown', esc)
-        };
-        x.onclick = close;
-        ov.addEventListener('click', e => {
-            if (e.target === ov) close()
-        });
-        document.addEventListener('keydown', esc);
-        box.append(x, h);
+        const box = modal(root, 'What is vowel length?');
         if (slide && slide.intro && slide.intro.length) {
             const t = el('div', 'intro');
             fill(t, slide.intro);
             box.append(t)
-        } else box.append(el('p', 'msg', slideErr ? `Could not load the explanation (${slideErr}).` : 'The explanation is not available yet. Check that guide.pptx is loading and has a “What is vowel length?” heading on its first slide.'));
-        ov.append(box);
-        root.append(ov)
+        } else box.append(el('p', 'msg', slideErr ? `Could not load the explanation (${slideErr}).` : 'The explanation is not available yet. Check that guide.pptx is loading and has a “What is vowel length?” heading on its first slide.'))
     }
 
     const findSlideRule = txt => Rules.findSlideRule(slide && slide.srules, txt);
@@ -453,7 +429,7 @@
 // Walks the Rules tab in sheet order: the first rule that describes the word is the one that applies.
     const isGmc = r => /^gmc:/i.test(r.b || '') || /applies only to words from the germanic component/i.test(r.c || '');
 
-    // Rules in the order they are asked (built in rules.js, shared with experimental.html)
+    // Rules in the order they are asked (built in rules.js)
     const wizSeq = branch => Rules.sequence(rules, branch, slide && slide.srules);
 
     function wizNext(branch, i, notes) {
@@ -953,23 +929,7 @@
             slide,
             rules: rules.length ? {head: rhead, rules} : null
         };
-        const name = `lokshn-search-${data.exported.slice(0, 10)}.json`,
-            file = new File([JSON.stringify(data)], name, {type: 'application/json'});
-        try {
-            if (navigator.canShare && navigator.canShare({files: [file]})) {
-                await navigator.share({files: [file]});
-                return
-            }
-        } catch (e) {
-            if (e.name === 'AbortError') return
-        }
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(file);
-        a.download = name;
-        document.body.append(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(a.href), 10000)
+        await saveJSON(`lokshn-search-${data.exported.slice(0, 10)}.json`, JSON.stringify(data), true)
     }
 
     async function importData(file) {

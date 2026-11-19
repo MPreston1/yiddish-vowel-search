@@ -5,18 +5,10 @@
         DIALS = [['Klal', 'Klal (Standard)'], ['NEY', 'NEY (Northeastern)'], ['CY', 'CY (Central)'], ['SEY', 'SEY (Southeastern)']];
     const root = document.getElementById('app-o'), $ = id => document.getElementById('o-' + id);
 
-    function el(tag, cls, txt) {
-        const e = document.createElement(tag);
-        if (cls) e.className = cls;
-        if (txt != null) e.textContent = txt;
-        return e
-    }
-
+    const {el, norm, fetchSheet, modal, saveJSON} = Shared;
     const {get: idbGet, set: idbSet} = kv('oy-lookup');
 
 // ---- parsing
-    const norm = s => (s || '').normalize('NFD').replace(/[\u0591-\u05C7]/g, '').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').replace(/[\s\-()…]/g, '').toLowerCase();
-
     function table(csv) {
         const t = parseCSV(csv), head = t[0].map(h => h.trim().toLowerCase());
         return {
@@ -97,18 +89,7 @@
             if (navigator.onLine === false) throw Object.assign(new Error('offline'), {name: 'Offline'});
             setStatus(words.length ? 'Updating…' : 'Loading data…');
             // Give up after FETCH_TIMEOUT ms so a bad connection never leaves the app waiting; saved data stays in use.
-            const get = async n => {
-                const ac = new AbortController(), tm = setTimeout(() => ac.abort(), FETCH_TIMEOUT);
-                try {
-                    const r = await fetch(url(n), {signal: ac.signal});
-                    if (!r.ok) throw new Error(r.status);
-                    const t = await r.text();
-                    if (t.trim().startsWith('<')) throw new Error('Sheet is not public');
-                    return t
-                } finally {
-                    clearTimeout(tm)
-                }
-            };
+            const get = n => fetchSheet(url(n), FETCH_TIMEOUT);
             const [a, b, c] = await Promise.all([get('Oy'), get('Rules'), get('MinimalPairs')]);
             words = buildWords(a);
             rules = buildRules(b);
@@ -256,15 +237,7 @@
 
     // ---- rule modal
     function showRule(r) {
-        const ov = el('div', 'ov'), m = el('div', 'modal'), x = el('button', 'x', '×');
-        x.type = 'button';
-        x.setAttribute('aria-label', 'Close');
-        const close = () => ov.remove();
-        x.onclick = close;
-        ov.onclick = e => {
-            if (e.target === ov) close()
-        };
-        m.append(x, el('h3', null, r.name));
+        const m = modal(root, r.name), close = m.close;
         if (r.when) {
             m.append(el('div', 'rl', 'Applies when'), el('div', 'pre', r.when))
         }
@@ -287,8 +260,6 @@
             };
             m.append(b)
         }
-        ov.append(m);
-        root.append(ov)
     }
 
     // ---- tabs: groups, pairs
@@ -389,13 +360,7 @@
             return
         }
         const data = {app: 'oy-search', version: 1, exported: new Date().toISOString(), words, rules, pairs};
-        const blob = new Blob([JSON.stringify(data)], {type: 'application/json'}), a = el('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `oy-search-${new Date().toISOString().slice(0, 10)}.json`;
-        document.body.append(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        saveJSON(`oy-search-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data));
         setStatus(`Exported ${words.length} words.`)
     };
     $('imp').onclick = () => $('impfile').click();

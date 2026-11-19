@@ -3,7 +3,6 @@
 (function (root) {
     const PAS = '\u05B7', KOM = '\u05B8', HIRIQ = '\u05B4';
     const FINAL = {'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ'};
-    const DENTAL = ['ד', 'ט', 'נ', 'ל'];
     const PKF = ['פ', 'ק', 'צ', 'טש', 'ש', 'דזש', 'זש'];
 
     function tokens(word) {

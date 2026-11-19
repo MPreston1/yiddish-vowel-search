@@ -57,6 +57,85 @@ function parseCSV(t) {
     return out
 }
 
+// ---- helpers shared by rules.js, length.js and oy.js (kept in one object so they cannot clash with names on other pages) ----
+const Shared = (() => {
+    // Creates an element with an optional class and text.
+    function el(tag, cls, txt) {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (txt != null) e.textContent = txt;
+        return e
+    }
+
+    // Search key for Yiddish words with all vowel and letter marks removed (ligatures spelled out; spaces, hyphens, brackets and … ignored).
+    const norm = s => (s || '').normalize('NFD').replace(/[\u0591-\u05C7]/g, '').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').replace(/[\s\-()…]/g, '').toLowerCase();
+
+    // Downloads a sheet tab as text. Gives up after `ms` (default 15 s) so a blocked connection cannot hang the page.
+    async function fetchSheet(url, ms) {
+        const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms || 15000);
+        try {
+            const res = await fetch(url, {signal: ctl.signal});
+            if (!res.ok) throw new Error(res.status);
+            const text = await res.text();
+            if (text.trim().startsWith('<')) throw new Error('Sheet is not public');
+            return text
+        } finally {
+            clearTimeout(timer)
+        }
+    }
+
+    // Opens an empty pop-up with a title and close button (X, Escape, or a tap outside) inside host; returns its box.
+    function modal(host, title) {
+        const ov = el('div', 'ov'), box = el('div', 'modal'), h = el('h3');
+        h.dir = 'auto';
+        h.textContent = title;
+        const x = el('button', 'x', '×');
+        x.type = 'button';
+        x.setAttribute('aria-label', 'Close');
+        const esc = e => {
+            if (e.key === 'Escape') close()
+        }, close = () => {
+            ov.remove();
+            document.removeEventListener('keydown', esc)
+        };
+        x.onclick = close;
+        ov.addEventListener('click', e => {
+            if (e.target === ov) close()
+        });
+        document.addEventListener('keydown', esc);
+        box.append(x, h);
+        ov.append(box);
+        host.append(ov);
+        box.close = close;   // lets the caller close the pop-up itself (for example from a button inside it)
+        return box
+    }
+
+    // Saves text as a .json file. With share=true, tries the phone's share sheet first (Save to Files, AirDrop, ...);
+    // otherwise, or if sharing is not available, it downloads the file.
+    async function saveJSON(name, text, share) {
+        const file = new File([text], name, {type: 'application/json'});
+        if (share) {
+            try {
+                if (navigator.canShare && navigator.canShare({files: [file]})) {
+                    await navigator.share({files: [file]});
+                    return
+                }
+            } catch (e) {
+                if (e.name === 'AbortError') return
+            }
+        }
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(file);
+        a.download = name;
+        document.body.append(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 10000)
+    }
+
+    return {el, norm, fetchSheet, modal, saveJSON}
+})();
+
 // ---- Yiddish typing mode (Yiddish Klal layout), shared by both tools: type ~ to toggle, ~~ for a literal ~
 // Maps physical keys (event.code) to [plain, shift, option, shift+option]; other keys type normally.
 const YK_MAP = {
@@ -176,7 +255,6 @@ const YT = (() => {
 
 // ---- mode switch: Vowel length / Oy vowel ----
 (function () {
-    if (!document.getElementById('modebar')) return;   // pages without the mode switch (experimental.html)
     const NAMES = {l: 'length', o: 'oy'}, COLORS = {l: '#16324f', o: '#4a2a73'}, H = document.documentElement;
 
     function paint(m) {

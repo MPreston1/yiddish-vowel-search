@@ -1,7 +1,7 @@
-// Shared by the main app (length.js) and experimental.html:
+// Used by the main app (length.js):
 // sheet addresses, parsing of the Database and Rules tabs, the order in which rules are asked,
 // the rules that live on slides of guide.pptx, and the rule pop-ups.
-// Needs shared.js (kv, parseCSV) loaded first, and jszip.min.js for reading guide.pptx.
+// Needs shared.js (kv, parseCSV, Shared) loaded first, and jszip.min.js for reading guide.pptx.
 const Rules = (function () {
     const SHEET_ID = '1Vip_J4QjpMBorfov15jmbXouSXQMAmMXT0EbYsYfPkc', GID = '671156978';
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&gid=${GID}`;
@@ -9,7 +9,7 @@ const Rules = (function () {
     const PPTX_URL = 'data/guide.pptx', OLD_PPTX_URL = 'guide.pptx';   // the old place is only tried if the new one is missing
     const PLACE_URL = 'https://yivo.org/yiddishland-topo';
 
-    const norm = s => (s || '').normalize('NFD').replace(/[\u0591-\u05C7]/g, '').replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').replace(/[\s\-()]/g, '').toLowerCase();
+    const {el, norm, modal} = Shared;   // small helpers shared with both tools (shared.js)
     const loose = s => (s || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 
     // ---- Database tab ----
@@ -67,23 +67,6 @@ const Rules = (function () {
             }))
         }
     }
-
-    // Downloads a sheet tab as text. Gives up after `ms` so a blocked connection cannot hang the page.
-    async function fetchSheet(url, ms) {
-        const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms || 15000);
-        try {
-            const res = await fetch(url, {signal: ctl.signal});
-            if (!res.ok) throw new Error(res.status);
-            const text = await res.text();
-            if (text.trim().startsWith('<')) throw new Error('Sheet is not public');
-            return text
-        } finally {
-            clearTimeout(timer)
-        }
-    }
-
-    const fetchRulesTab = async ms => buildRules(await fetchSheet(RULES_URL, ms));
-    const fetchDatabase = async ms => buildRows(await fetchSheet(CSV_URL, ms));
 
     // ---- Reading guide.pptx ----
     const NS_A = 'http://schemas.openxmlformats.org/drawingml/2006/main',
@@ -250,13 +233,6 @@ const Rules = (function () {
         return r
     }
 
-    // Fetches guide.pptx and returns just its slide rules (the experimental page uses this; the main app reads the whole file).
-    async function loadSlideRules() {
-        if (!window.JSZip) throw new Error('unzip library missing');
-        const r = await fetchGuide();
-        return parseSlideRules((await openPptx(await r.arrayBuffer())).slideXml)
-    }
-
     // Slide rules are matched loosely (case, dashes, punctuation and spacing ignored); the Rules tab always wins.
     function findSlideRule(srules, txt) {
         const k = loose(txt);
@@ -380,13 +356,6 @@ const Rules = (function () {
     }
 
     // ---- Pop-ups ----
-    function el(tag, cls, txt) {
-        const e = document.createElement(tag);
-        if (cls) e.className = cls;
-        if (txt != null) e.textContent = txt;
-        return e
-    }
-
     function fill(node, runs) {
         for (const x of runs || []) {
             const n = document.createElement(x.s ? 'sup' : 'span');
@@ -417,31 +386,7 @@ const Rules = (function () {
         node.append(a, text.slice(m.index + m[0].length))
     }
 
-    // Opens an empty pop-up with a title and close button (X, Escape, or a tap outside); returns its box.
-    function modal(host, title) {
-        const ov = el('div', 'ov'), box = el('div', 'modal'), h = el('h3');
-        h.dir = 'auto';
-        h.textContent = title;
-        const x = el('button', 'x', '×');
-        x.type = 'button';
-        x.setAttribute('aria-label', 'Close');
-        const esc = e => {
-            if (e.key === 'Escape') close()
-        }, close = () => {
-            ov.remove();
-            document.removeEventListener('keydown', esc)
-        };
-        x.onclick = close;
-        ov.addEventListener('click', e => {
-            if (e.target === ov) close()
-        });
-        document.addEventListener('keydown', esc);
-        box.append(x, h);
-        ov.append(box);
-        host.append(ov);
-        return box
-    }
-
+    // Shows a Rules-tab rule (its two text fields) in a pop-up.
     function showRule(r, rhead, host) {
         const box = modal(host, r.b);
         for (const [lab, txt, isOut] of [[rhead[1], r.c, false], [rhead[2], r.d, true]]) {
@@ -474,32 +419,22 @@ const Rules = (function () {
     }
 
     return {
-        SHEET_ID,
         CSV_URL,
         RULES_URL,
-        PPTX_URL,
         fetchGuide,
-        PLACE_URL,
-        norm,
         loose,
         buildRows,
         buildRules,
-        fetchRulesTab,
-        fetchDatabase,
         xml: {NS_A, NS_P, NS_R, kids, first, parasOf, joinParas, textOf, xfrm},
-        SLIDE_RULES,
         openPptx,
         parseSlideRules,
-        loadSlideRules,
         findSlideRule,
         sequence,
-        verbForms,
         matchVerbForm,
         matchComparative,
         matchShortPerfect,
         fill,
         setText,
-        modal,
         showRule,
         showSlideRule
     }
