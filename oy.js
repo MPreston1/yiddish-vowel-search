@@ -1,6 +1,8 @@
 (function () {
     const SHEET_ID = '1grJ0TvZI_2iYKaEJSq0gU-Qs_hvHi7Rg8uP_sz8Rk0M';
     const url = n => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&headers=1&sheet=${n}`;
+    // The approved copies of the three tabs (kept up to date by the Pi through pull requests). The live sheet is the fallback.
+    const DATA_DIR = 'data', APPROVED = ['oy.csv', 'oy-rules.csv', 'oy-minimal-pairs.csv'], TABS = ['Oy', 'Rules', 'MinimalPairs'];
     const CACHE_KEY = 'oy-lookup-v1', PAGE = 50, FETCH_TIMEOUT = 8000,
         DIALS = [['Klal', 'Klal (Standard)'], ['NEY', 'NEY (Northeastern)'], ['CY', 'CY (Central)'], ['SEY', 'SEY (Southeastern)']];
     const root = document.getElementById('app-o'), $ = id => document.getElementById('o-' + id);
@@ -42,6 +44,21 @@
     function buildPairs(csv) {
         const T = table(csv);
         return {head: T.head, rows: T.rows}
+    }
+
+    // ---- where the data comes from
+    // The three tabs as CSV text, from one source only (never a mix): the approved copies if all three are there and
+    // look right (a missing file, an error page or the wrong columns all count as "not there"), otherwise the live
+    // Google Sheet, as before. (sw.js already fetches same-origin files network-first, so the copies are always current.)
+    async function fetchTabs() {
+        try {
+            const csv = await Promise.all(APPROVED.map(n => fetchSheet(`${DATA_DIR}/${n}`, FETCH_TIMEOUT)));
+            if (table(csv[0]).col('word') < 0 || table(csv[1]).col('rule') < 0 || table(csv[2]).head.length < 2) throw new Error('unexpected columns');
+            return {csv, src: 'approved'}
+        } catch (e) {
+            const csv = await Promise.all(TABS.map(n => fetchSheet(url(n), FETCH_TIMEOUT)));
+            return {csv, src: 'live'}
+        }
     }
 
     let words = [], rules = [], pairs = {head: [], rows: []}, matches = [], shown = 0;
@@ -86,9 +103,8 @@
         try {
             if (navigator.onLine === false) throw Object.assign(new Error('offline'), {name: 'Offline'});
             setStatus(words.length ? 'Updating…' : 'Loading data…');
-            // Give up after FETCH_TIMEOUT ms so a bad connection never leaves the app waiting; saved data stays in use.
-            const get = n => fetchSheet(url(n), FETCH_TIMEOUT);
-            const [a, b, c] = await Promise.all([get('Oy'), get('Rules'), get('MinimalPairs')]);
+            // Each download gives up after FETCH_TIMEOUT ms so a bad connection never leaves the app waiting; saved data stays in use.
+            const {csv: [a, b, c], src} = await fetchTabs();
             words = buildWords(a);
             rules = buildRules(b);
             pairs = buildPairs(c);
@@ -96,7 +112,7 @@
                 await idbSet(CACHE_KEY, {at: Date.now(), words, rules, pairs})
             } catch (e) {
             }
-            setStatus(`${words.length} words · up to date`);
+            setStatus(`${words.length} words · up to date${src === 'live' ? ' (live sheet)' : ''}`);
             render();
         } catch (e) {
             const slow = e.name === 'AbortError', off = e.name === 'Offline' || slow || e instanceof TypeError;
