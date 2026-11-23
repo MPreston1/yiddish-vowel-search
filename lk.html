@@ -84,6 +84,10 @@ ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
     <select id="snd" style="width:auto"></select>
   </div>
   <div class="row">
+    <label><input type="checkbox" id="dg"> The consonant after the stressed vowel has a dagesh in the standard Hebrew pointing</label>
+  </div>
+  <p class="mut">Nakdan often leaves that dagesh out (חֻמָּשׁ, אִשָּׁה, גְּדֻלָּה). Check Morfix or Milog if you are not sure.</p>
+  <div class="row">
     <label class="mut" for="der">Is the word derived from a base word?</label>
     <select id="der" style="width:auto">
       <option value="no">No / not sure</option>
@@ -220,13 +224,14 @@ ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
     U.forEach((u, i) => {
       if (u.t !== 'V' || u.furtive) return;
       const b = el('button', 'he' + (i === S3.p ? ' pri' : ''), u.s || '·'); b.type = 'button';
-      b.onclick = () => { S3.p = i; $('snd').value = U[i].v; renderS3(); };
+      b.onclick = () => { S3.p = i; $('snd').value = U[i].v; $('dg').checked = !!(U[i + 1] && U[i + 1].t === 'C' && U[i + 1].dag); renderS3(); };
       chips.append(b);
     });
     const p = S3.p;
     const der = $('der').value;
     $('base').hidden = der !== 'other';
-    const V2 = U.map((u, i) => i === p ? Object.assign({}, u, {v: $('snd').value || u.v}) : u);
+    let V2 = U.map((u, i) => i === p ? Object.assign({}, u, {v: $('snd').value || u.v}) : u);
+    if ($('dg').checked && V2[p + 1] && V2[p + 1].t === 'C') V2[p + 1] = Object.assign({}, V2[p + 1], {dag: true});   // dagesh confirmed by the person
     const res = evaluate(V2, p, der), win = res.find(x => x.match);
     const R = $('result'); R.textContent = '';
     const out = win.r.k === 'dother' ? $('base').value : win.r.out;
@@ -265,6 +270,7 @@ ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
     if (!snd.options.length) for (const s of SOUNDS) snd.append(new Option(s, s));
     snd.value = U[S3.p].v;
     $('der').value = 'no';
+    $('dg').checked = !!(U[S3.p + 1] && U[S3.p + 1].t === 'C' && U[S3.p + 1].dag);
     renderS3();
   }
 
@@ -286,6 +292,7 @@ ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
   $('cp').onclick = copyThenNakdan;
   $('snd').onchange = renderS3;
   $('der').onchange = renderS3;
+  $('dg').onchange = renderS3;
   $('base').onchange = renderS3;
   $('spell').addEventListener('input', () => { $('s3').hidden = true; setLinks(); });
 })();

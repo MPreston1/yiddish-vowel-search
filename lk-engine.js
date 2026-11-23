@@ -7,6 +7,7 @@
   const VM = {'\u05B1': ['e', 'hsegol'], '\u05B2': ['a', 'hpatah'], '\u05B3': ['o', 'hqamats'], '\u05B4': ['i', 'hiriq'],
     '\u05B5': ['ey', 'tsere'], '\u05B6': ['e', 'segol'], '\u05B7': ['a', 'patah'], '\u05B8': ['o', 'qamats'],
     '\u05C7': ['o', 'qamats'], '\u05B9': ['oy', 'holam'], '\u05BB': ['u', 'qubuts']};
+  const HOLAM_MALE = (typeof process !== 'undefined' && process.env.LK_HOLAM) || 'u';   // sound given to a vav with holam
   const SOUNDS = ['a', 'e', 'ey', 'i', 'o', 'oy', 'u', 'ay'];
   const DAG = '\u05BC', SPIR = ['ב', 'כ', 'פ', 'ת'];
 
@@ -23,7 +24,7 @@
     for (let i = 0; i < L.length; i++) {
       const l = L[i], c = l.c, vm = vowelOf(l), dag = l.m.includes(DAG), end = i === L.length - 1, pu = U[U.length - 1];
       if (c === 'ו') {
-        if (vm && vm[1] === 'holam' && pu && pu.t === 'C') V(vm, l.txt);          // holam male
+        if (vm && vm[1] === 'holam' && pu && pu.t === 'C') V([HOLAM_MALE, 'holam'], l.txt);   // holam male
         else if (!vm && dag && pu && pu.t === 'C') V(['u', 'shuruk'], l.txt);                     // shuruk
         else { U.push({t: 'C', c: 'װ', dag}); if (vm) V(vm, l.txt); }
         continue;
@@ -41,6 +42,8 @@
           if (end && vm[1] === 'patah' && c !== 'א' && pu && pu.t === 'V') {                        // furtive patah
             U.push({t: 'V', v: 'a', src: 'patah', furtive: true, s: ''});
             U.push({t: 'C', c, silentG: true});
+          } else if (['hsegol', 'hpatah', 'hqamats'].includes(vm[1]) && U.some(u => u.t === 'V')) {
+            U.push({t: 'C', c, silentG: true});     // a reduced vowel on a guttural inside the word is not a syllable in Yiddish (נֶאֱמָן: the א is silent)
           } else V(vm, l.txt, {g: c});                                                               // the guttural is silent; its vowel stays
         } else if (end && c === 'ה') {
           let k = U.length - 1;
@@ -134,6 +137,8 @@
     const nuclei = [];
     U.forEach((u, i) => { if (u.t === 'V' && !u.furtive) nuclei.push(i); });
     if (!nuclei.length) return -1;
+    const fur = U.findIndex(u => u.furtive);
+    if (fur > 0) { const before = nuclei.filter(i => i < fur); if (before.length) return before[before.length - 1]; }   // בטוּחַ: stress right before the furtive patah
     const cand = nuclei.filter((i, k) => !['hsegol', 'hpatah', 'hqamats'].includes(U[i].src) || k === 0);
     return cand.length >= 2 ? cand[cand.length - 2] : cand[0];
   }

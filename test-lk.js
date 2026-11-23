@@ -14,6 +14,7 @@
 //   --out=report.csv                 where to write the full report (default lk-report.csv)
 //   --delay=MS                       pause between Nakdan requests (default 250)
 //   --debug                          print the raw Nakdan answer for the first word, to check the format
+//   --why=WORD                       explain one word: every Nakdan reading, its units, the stress guess and each rule's ✓/✗
 //
 // Nakdan answers are cached in nakdan-cache.json, so later runs are instant and repeatable.
 // Needs Node 18+ (built-in fetch) and network access to nakdan-2-0.loadbalancer.dicta.org.il.
@@ -47,6 +48,8 @@ let rows = T.slice(1).filter(r => String(r[C.word]).trim() && /^LK:/i.test(Strin
 });
 rows = rows.filter(r => r.comp === 'loshn-koydesh' || (flag('nativized') && r.comp.startsWith('loshn-koydesh')));
 if (!flag('compounds')) rows = rows.filter(r => !/[\s\-־()]/.test(r.word));
+const WHY = opt('why', '');
+if (WHY) rows = rows.filter(r => r.word.normalize('NFD').replace(/[\u0591-\u05C7]/g, '') === WHY.normalize('NFD').replace(/[\u0591-\u05C7]/g, ''));
 if (LIMIT) rows = rows.slice(0, LIMIT);
 console.log(`${rows.length} loshn-koydesh words to test (genre: ${GENRE})`);
 
@@ -96,7 +99,19 @@ const DBV = {o: ['o'], e: ['e', 'ey'], i: ['i'], u: ['u']};   // engine sounds t
 
 function run(U, p, der) {
   const res = E.evaluate(U, p, der), w = res.find(x => x.match);
-  return {rule: w.r.name, len: w.r.out, k: w.r.k};
+  return {rule: w.r.name, len: w.r.out, k: w.r.k, why: w.why};
+}
+
+// Units as text: [vowel sound] for vowels (with its guttural letter first if it came from one, ~ = furtive), letters for consonants
+// (' = dagesh, ° = silent guttural), * marks the stressed vowel.
+function describe(U, p) {
+  return U.map((u, i) => (u.t === 'V' ? `${u.g || ''}[${u.v}${u.furtive ? '~' : ''}]` : u.c + (u.dag ? "'" : '') + (u.silentG ? '°' : '')) + (i === p ? '*' : '')).join(' ');
+}
+// What follows the stressed vowel: consonants, then the next vowel (or the end of the word).
+function after(U, p) {
+  let j = p + 1; const c = [];
+  while (j < U.length && U[j].t === 'C') c.push(U[j].c + (U[j].dag ? "'" : '') + (U[j].silentG ? '°' : '')), j++;
+  return (c.join(' ') || '-') + ' → ' + (U[j] ? `${U[j].g || ''}[${U[j].v}]` : 'end');
 }
 
 function analyse(row) {
@@ -123,6 +138,7 @@ function analyse(row) {
     const good = ok(eng) , goodOrc = orc && ok(orc);
     if (first) {
       out.reading = reading; out.engine = eng; out.oracle = orc;
+      out.units = describe(U, p); out.stressed = `[${U[p].v}] (${U[p].src})`; out.after = after(U, p);
       out.status = good ? 'ok'
         : goodOrc ? 'stress guess wrong (right with the database vowel)'
         : eng.rule === row.rule ? 'rule ok, length differs'
@@ -137,10 +153,31 @@ function analyse(row) {
   return out;
 }
 
+function explain() {
+  if (!rows.length) { console.log('That word is not among the tested loshn-koydesh words (check the spelling, or use --compounds / --nativized).'); return; }
+  for (const row of rows) {
+    const raw = cache[GENRE + '|' + bare(row.word)] || [], rds = E.adapt(row.word, raw);
+    console.log(`\n${row.word}   database: ${row.rule} (${row.follows}), vowel/length: ${row.exp.map(e => e.len + ' [' + e.v + ']').join(' + ')}`);
+    console.log(`Nakdan readings (after laying your typed marks over them): ${rds.join('  |  ') || 'none'}`);
+    rds.forEach((rd, k) => {
+      const U = E.parse(rd), p = E.guessStress(U);
+      console.log(`\n  Reading ${k + 1}: ${rd}`);
+      console.log(`  units: ${describe(U, p)}`);
+      if (p < 0) { console.log('  no vowel found'); return; }
+      console.log(`  stress guess: [${U[p].v}] (${U[p].src});  after it: ${after(U, p)}`);
+      const res = E.evaluate(U, p, 'no');
+      for (const x of res) console.log(`    ${x.match ? '✓' : '✗'} ${x.r.name}  —  ${x.why}`);
+      const w = res.find(x => x.match);
+      console.log(`  → ${w.r.name}: ${w.r.out}   ${w.r.name === row.rule ? '(same rule as the database)' : '(database says ' + row.rule + ')'}`);
+    });
+  }
+}
+
 function csv(v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 
 (async () => {
   await fetchAll();
+  if (WHY) { explain(); return; }
   const R = rows.map(analyse);
   const by = {};
   for (const r of R) by[r.status] = (by[r.status] || 0) + 1;
@@ -163,10 +200,11 @@ function csv(v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' 
   console.log('\nFirst disagreements:');
   for (const r of bad.slice(0, 15)) console.log(`  ${r.row.word}  [${r.reading || '-'}]  db: ${r.row.rule} (${r.row.follows})  engine: ${r.engine ? r.engine.rule + ' ' + r.engine.len : '-'}  — ${r.status}`);
 
-  const lines = [['word', 'nakdan_reading', 'other_readings', 'db_rule', 'db_follows', 'db_vowel_length', 'engine_rule', 'engine_length', 'oracle_rule', 'oracle_length', 'status'].join(',')];
+  const lines = [['word', 'nakdan_reading', 'other_readings', 'db_rule', 'db_follows', 'db_vowel_length', 'engine_rule', 'engine_length', 'oracle_rule', 'oracle_length', 'status', 'units (* = stressed)', 'stressed_vowel', 'after_stressed', 'why_engine_rule'].join(',')];
   for (const r of R) lines.push([r.row.word, r.reading || '', r.readings.slice(1).join(' | '), r.row.rule, r.row.follows,
     r.row.exp.map(e => `${e.len} [${e.v}]`).join(' + '), r.engine ? r.engine.rule : '', r.engine ? r.engine.len : '',
-    r.oracle ? r.oracle.rule : '', r.oracle ? r.oracle.len : '', r.status].map(csv).join(','));
+    r.oracle ? r.oracle.rule : '', r.oracle ? r.oracle.len : '', r.status,
+    r.units || '', r.stressed || '', r.after || '', r.engine ? r.engine.why : ''].map(csv).join(','));
   fs.writeFileSync(OUT, '\ufeff' + lines.join('\n'));
   console.log(`\nFull report: ${OUT}   (open in Excel or Numbers and filter on "status")`);
 })();
