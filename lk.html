@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Loshn-Koydesh Vowel Length (experimental)</title>
+<style>
+:root{--bg:#fff;--fg:#1c2733;--mut:#5d6b7a;--card:#f3f6f9;--line:#d3dbe3;--acc:#16324f;--accfg:#fff;--ok:#1f7a3d;--warn:#a15c00}
+@media (prefers-color-scheme:dark){:root{--bg:#10161d;--fg:#e6ecf2;--mut:#9aa8b6;--card:#1a232d;--line:#2d3945;--acc:#5b9bd5;--accfg:#08121c;--ok:#5fcf86;--warn:#e0a24a}}
+*{box-sizing:border-box}
+body{margin:0;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);background:var(--bg);color:var(--fg);font:16px/1.5 -apple-system,system-ui,Segoe UI,sans-serif}
+main{max-width:720px;margin:0 auto;padding:16px}
+h1{font-size:1.25rem;margin:.2em 0}
+h2{font-size:1.05rem;margin:0 0 .5em}
+.he{font-family:"Times New Roman","Noto Serif Hebrew",serif;font-size:1.6rem;direction:rtl}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0}
+.mut{color:var(--mut);font-size:.9rem}
+input[type=text],select{font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);width:100%}
+input.he{font-size:1.6rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.row>*{flex:0 0 auto}.row>input{flex:1 1 200px}
+button,a.btn{font:inherit;padding:10px 14px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;text-decoration:none;display:inline-block}
+button.pri{background:var(--acc);color:var(--accfg);border-color:var(--acc)}
+button.opt{display:block;width:100%;text-align:right;margin:6px 0}
+button.opt.sel{outline:2px solid var(--acc)}
+button.opt small{display:block;text-align:left;color:var(--mut);direction:ltr;font-size:.8rem}
+.err{color:var(--warn)}
+ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>Loshn-Koydesh Vowel Length <span class="mut">(experimental)</span></h1>
+<p class="mut">For words taken from Hebrew/Aramaic. Step 1: get a pointed spelling. Step 2: confirm it. Step 3: apply the rules.</p>
+
+<section class="card" id="s1">
+  <h2>1. Enter the word</h2>
+  <div class="row">
+    <input id="word" class="he" type="text" dir="rtl" lang="he" placeholder="e.g. מצווה" autocomplete="off" autocapitalize="off" spellcheck="false">
+  </div>
+  <div class="row">
+    <label class="mut" for="genre">Style:</label>
+    <select id="genre" style="width:auto">
+      <option value="rabbinic" selected>Rabbinic</option>
+      <option value="modern">Modern</option>
+      <option value="poetry">Poetry</option>
+    </select>
+    <button class="pri" id="go" type="button">Add nikud</button>
+  </div>
+  <p class="mut">Nakdan (Dicta) points the word the way Hebrew is normally pointed. It may not match the Yiddish spelling, so the next step checks it.</p>
+  <div id="opts"></div>
+  <p class="err" id="err" hidden></p>
+</section>
+
+<section class="card" id="s2" hidden>
+  <h2>2. Is this spelling correct?</h2>
+  <div class="row"><input id="spell" class="he" type="text" dir="rtl" lang="he" autocomplete="off" spellcheck="false"></div>
+  <p class="mut">You can edit the spelling above (for example to fix a vowel or a dagesh) before confirming.</p>
+  <div class="row">
+    <button class="pri" id="yes" type="button">Yes, it is correct</button>
+    <button id="no" type="button">No</button>
+    <button id="unsure" type="button">Not sure</button>
+  </div>
+  <div id="check" hidden>
+    <p>Look the word up in one of these, then correct the spelling above and press “Yes”:</p>
+    <div class="row">
+      <button id="cp" type="button">Copy word, then open Nakdan</button>
+      <a class="btn" id="morfix" target="_blank" rel="noopener">Morfix</a>
+      <a class="btn" id="milog" target="_blank" rel="noopener">Milog</a>
+    </div>
+    <p class="mut" id="cpnote"></p>
+  </div>
+</section>
+
+<section class="card" id="s3" hidden>
+  <h2>3. Apply the rules</h2>
+  <p>Confirmed spelling: <span class="he" id="final"></span></p>
+  <p class="mut">The app reads the pointing as Ashkenazic Yiddish sounds (patah = a, qamats = o, segol = e, tsere = ey, holam = oy, hiriq = i, shuruk/qubuts = u) and guesses the stress. Check both, since they decide the result.</p>
+  <p><strong>Stressed vowel</strong> (tap to change):</p>
+  <div class="row" id="chips" dir="rtl"></div>
+  <div class="row">
+    <label class="mut" for="snd">Sound of that vowel:</label>
+    <select id="snd" style="width:auto"></select>
+  </div>
+  <div class="row">
+    <label class="mut" for="der">Is the word derived from a base word?</label>
+    <select id="der" style="width:auto">
+      <option value="no">No / not sure</option>
+      <option value="open">Yes: the base ends in a consonant that is followed by a vowel here (e.g. דינים &lt; דין)</option>
+      <option value="other">Yes: any other derivation (diminutive, prefixed form, etc.)</option>
+    </select>
+    <select id="base" style="width:auto" hidden>
+      <option value="Long">Base vowel is long</option>
+      <option value="Short">Base vowel is short</option>
+    </select>
+  </div>
+  <div id="result"></div>
+  <div id="analysis"></div>
+</section>
+</main>
+
+<script src="lk-engine.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const API = 'https://nakdan-2-0.loadbalancer.dicta.org.il/api';
+  const RULES_URL = 'https://docs.google.com/spreadsheets/d/1Vip_J4QjpMBorfov15jmbXouSXQMAmMXT0EbYsYfPkc/gviz/tq?tqx=out:csv&headers=1&sheet=Rules';
+
+  // Plain letters only: no marks, Yiddish ligatures spelled out, and the Hebrew final forms are left alone.
+  const bare = s => (s || '').normalize('NFD').replace(/[\u0591-\u05C7]/g, '')
+    .replace(/\u05F0/g, 'וו').replace(/\u05F1/g, 'וי').replace(/\u05F2/g, 'יי').replace(/[\s\-()…]/g, '');
+
+  function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+
+  function showErr(msg) { const e = $('err'); e.textContent = msg || ''; e.hidden = !msg; }
+
+  // ---- Step 1: Nakdan ----
+  async function nakdan(word, genre) {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
+    try {
+      // text/plain keeps this a "simple" request so the browser does not need a CORS preflight
+      const res = await fetch(API, {
+        method: 'POST', signal: ctl.signal,
+        headers: {'Content-Type': 'text/plain;charset=UTF-8'},
+        body: JSON.stringify({task: 'nakdan', data: word, genre, addmorph: true, matchpartial: true,
+          keepmetagim: false, keepqq: false, nodageshdefault: false, patachma: false, useTokenization: true})
+      });
+      if (!res.ok) throw new Error('Nakdan returned ' + res.status);
+      const j = await res.json();
+      return Array.isArray(j) ? j : (j.data || []);
+    } finally { clearTimeout(t); }
+  }
+
+  // Distinct pointed readings for the first real word, best first. "|" marks prefix breaks in Nakdan's output.
+  function readings(tokens) {
+    const tok = tokens.find(t => t && t.options && t.options.length);
+    if (!tok) return [];
+    const seen = new Map();
+    for (const o of tok.options) {
+      const w = (o.w || '').replace(/\|/g, '').replace(/\u05BD/g, '');
+      if (!w || seen.has(w)) continue;
+      seen.set(w, [o.lex, o.morph].filter(Boolean).join(' · '));
+    }
+    return [...seen].map(([w, info]) => ({w, info}));
+  }
+
+  function chooseReading(r, btn) {
+    for (const b of $('opts').querySelectorAll('button')) b.classList.remove('sel');
+    if (btn) btn.classList.add('sel');
+    $('spell').value = r;
+    $('s2').hidden = false;
+    $('s3').hidden = true;
+    $('check').hidden = true;
+  }
+
+  async function go() {
+    const w = bare($('word').value);
+    showErr('');
+    $('opts').textContent = '';
+    $('s2').hidden = true; $('s3').hidden = true;
+    if (!w) { showErr('Type a word first.'); return; }
+    $('go').disabled = true; $('go').textContent = 'Working…';
+    try {
+      const list = readings(await nakdan(w, $('genre').value));
+      if (!list.length) {
+        showErr('Nakdan gave no suggestion. You can type the pointed spelling yourself below, or look the word up.');
+        chooseReading(w);
+        $('check').hidden = false; setLinks();
+      } else {
+        if (list.length > 1) $('opts').append(el('p', 'mut', 'Nakdan found several readings. Tap the one that fits:'));
+        list.forEach((r, i) => {
+          const b = el('button', 'opt he', r.w); b.type = 'button';
+          b.dir = 'rtl';
+          if (r.info) b.append(el('small', '', r.info));
+          b.onclick = () => chooseReading(r.w, b);
+          $('opts').append(b);
+          if (i === 0) chooseReading(r.w, b);
+        });
+      }
+    } catch (e) {
+      showErr('Could not reach Nakdan (' + (e.name === 'AbortError' ? 'timed out' : e.message) + '). Type the pointed spelling yourself, or look it up with the links.');
+      chooseReading(w);
+      $('check').hidden = false; setLinks();
+    } finally { $('go').disabled = false; $('go').textContent = 'Add nikud'; }
+  }
+
+  // ---- Step 2: confirm or look up ----
+  function setLinks() {
+    const w = encodeURIComponent(bare($('spell').value || $('word').value));
+    $('morfix').href = 'https://www.morfix.co.il/' + w;
+    $('milog').href = 'https://milog.co.il/' + w;
+  }
+
+  async function copyThenNakdan() {
+    const w = bare($('spell').value || $('word').value);
+    try { await navigator.clipboard.writeText(w); $('cpnote').textContent = 'Copied “' + w + '”. Paste it into the Nakdan page.'; }
+    catch (e) { $('cpnote').textContent = 'Could not copy automatically. Word: ' + w; }
+    window.open('https://nakdan.dicta.org.il/', '_blank', 'noopener');
+  }
+
+  function askLookup() { $('check').hidden = false; setLinks(); }
+
+  const {SOUNDS, parse, RULES, evaluate, guessStress} = LKEngine;
+
+  const S3 = {U: [], p: 0};
+
+  function renderS3() {
+    const U = S3.U, chips = $('chips');
+    chips.textContent = '';
+    U.forEach((u, i) => {
+      if (u.t !== 'V' || u.furtive) return;
+      const b = el('button', 'he' + (i === S3.p ? ' pri' : ''), u.s || '·'); b.type = 'button';
+      b.onclick = () => { S3.p = i; $('snd').value = U[i].v; renderS3(); };
+      chips.append(b);
+    });
+    const p = S3.p;
+    const der = $('der').value;
+    $('base').hidden = der !== 'other';
+    const V2 = U.map((u, i) => i === p ? Object.assign({}, u, {v: $('snd').value || u.v}) : u);
+    const res = evaluate(V2, p, der), win = res.find(x => x.match);
+    const R = $('result'); R.textContent = '';
+    const out = win.r.k === 'dother' ? $('base').value : win.r.out;
+    const box = el('div', 'card');
+    box.style.background = 'var(--bg)';
+    box.append(el('h2', '', 'Result: ' + out));
+    box.append(el('p', '', 'Rule: ' + win.r.name));
+    box.append(el('p', 'mut', win.r.desc));
+    if (win.r.exc && win.r.exc !== 'none' && win.r.exc !== 'None') box.append(el('p', 'mut', 'Known exceptions: ' + win.r.exc));
+    R.append(box);
+    const A = $('analysis'); A.textContent = '';
+    A.append(el('p', 'mut', 'How each rule was checked (the first ✓ wins):'));
+    const ol = el('ol', 'rules');
+    for (const x of res) {
+      const li = el('li');
+      li.append(el('strong', '', (x.match ? '✓ ' : '✗ ') + x.r.name));
+      li.append(el('div', 'mut', x.why));
+      if (x.r === win.r) li.style.color = 'var(--ok)';
+      ol.append(li);
+    }
+    A.append(ol);
+  }
+
+  function startS3(word) {
+    const U = parse(word);
+    S3.U = U;
+    const A = $('analysis');
+    S3.p = guessStress(U);
+    if (S3.p < 0) {
+      $('chips').textContent = ''; $('result').textContent = '';
+      A.textContent = '';
+      A.append(el('p', 'err', 'No vowels found in this spelling, so the rules cannot be applied. Go back and add nikud.'));
+      return;
+    }
+    const snd = $('snd');
+    if (!snd.options.length) for (const s of SOUNDS) snd.append(new Option(s, s));
+    snd.value = U[S3.p].v;
+    $('der').value = 'no';
+    renderS3();
+  }
+
+  function confirm() {
+    const w = $('spell').value.trim();
+    if (!w) return;
+    $('final').textContent = w;
+    $('check').hidden = true;
+    $('s3').hidden = false;
+    startS3(w);
+    $('s3').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  }
+
+  $('go').onclick = go;
+  $('word').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  $('yes').onclick = confirm;
+  $('no').onclick = askLookup;
+  $('unsure').onclick = askLookup;
+  $('cp').onclick = copyThenNakdan;
+  $('snd').onchange = renderS3;
+  $('der').onchange = renderS3;
+  $('base').onchange = renderS3;
+  $('spell').addEventListener('input', () => { $('s3').hidden = true; setLinks(); });
+})();
+</script>
+</body>
+</html>
