@@ -13,6 +13,7 @@
 //   --nativized                      also include "loshn-koydesh, nativized"
 //   --out=report.csv                 where to write the full report (default lk-report.csv)
 //   --delay=MS                       pause between Nakdan requests (default 250)
+//   --debug                          print the raw Nakdan answer for the first word, to check the format
 //
 // Nakdan answers are cached in nakdan-cache.json, so later runs are instant and repeatable.
 // Needs Node 18+ (built-in fetch) and network access to nakdan-2-0.loadbalancer.dicta.org.il.
@@ -59,16 +60,21 @@ async function nakdan(w) {
   const res = await fetch(API, {
     method: 'POST', headers: {'Content-Type': 'text/plain;charset=UTF-8'},
     body: JSON.stringify({task: 'nakdan', data: w, genre: GENRE, addmorph: true, matchpartial: true, keepmetagim: false,
-      keepqq: false, nodageshdefault: false, patachma: false, useTokenization: true})
+      keepqq: false, nodageshdefmem: false, patachma: false})
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);
-  const j = await res.json(), tokens = Array.isArray(j) ? j : (j.data || []);
+  const j = await res.json();
+  if (flag('debug') && !nakdan.shown) { nakdan.shown = true; console.log('Raw Nakdan answer for ' + w + ':\n' + JSON.stringify(j, null, 1).slice(0, 1500)); }
+  const tokens = Array.isArray(j) ? j : (j.data || []);
   const tok = tokens.find(t => t && t.options && t.options.length);
   const seen = [];
   for (const o of tok ? tok.options : []) {
-    const x = (o.w || '').replace(/\|/g, '').replace(/\u05BD/g, '');
+    // an option is either an array whose first element is the pointed word, or an object with the word in .w
+    const raw = Array.isArray(o) ? o[0] : (typeof o === 'string' ? o : o && o.w);
+    const x = (raw || '').replace(/\|/g, '').replace(/\u05BD/g, '');
     if (x && !seen.includes(x)) seen.push(x);
   }
+  if (!seen.length) throw new Error('answer had no readable options (run with --debug --limit=1 to see it)');
   return seen.slice(0, 5);
 }
 
@@ -76,7 +82,7 @@ async function fetchAll() {
   let n = 0;
   for (const r of rows) {
     const key = GENRE + '|' + bare(r.word);
-    if (cache[key]) continue;
+    if (cache[key] && cache[key].length) continue;   // empty or failed answers are tried again
     try { cache[key] = await nakdan(bare(r.word)); }
     catch (e) { console.error(`  ${r.word}: ${e.message}`); cache[key] = null; if (++n > 5 && Object.values(cache).filter(Boolean).length === 0) { console.error('Nakdan is not answering; stopping.'); break; } }
     if (++n % 25 === 0) { fs.writeFileSync(CACHE, JSON.stringify(cache)); process.stdout.write(`  ${n} fetched\r`); }

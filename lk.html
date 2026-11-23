@@ -124,7 +124,7 @@ ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
         method: 'POST', signal: ctl.signal,
         headers: {'Content-Type': 'text/plain;charset=UTF-8'},
         body: JSON.stringify({task: 'nakdan', data: word, genre, addmorph: true, matchpartial: true,
-          keepmetagim: false, keepqq: false, nodageshdefault: false, patachma: false, useTokenization: true})
+          keepmetagim: false, keepqq: false, nodageshdefmem: false, patachma: false})
       });
       if (!res.ok) throw new Error('Nakdan returned ' + res.status);
       const j = await res.json();
@@ -138,9 +138,11 @@ ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
     if (!tok) return [];
     const seen = new Map();
     for (const o of tok.options) {
-      const w = (o.w || '').replace(/\|/g, '').replace(/\u05BD/g, '');
+      // an option is an array (word first) or an object with the word in .w
+      const raw = Array.isArray(o) ? o[0] : (typeof o === 'string' ? o : o && o.w);
+      const w = (raw || '').replace(/\|/g, '').replace(/\u05BD/g, '');
       if (!w || seen.has(w)) continue;
-      seen.set(w, [o.lex, o.morph].filter(Boolean).join(' · '));
+      seen.set(w, Array.isArray(o) ? (typeof o[1] === 'string' ? o[1] : '') : [o && o.lex, o && o.morph].filter(Boolean).join(' · '));
     }
     return [...seen].map(([w, info]) => ({w, info}));
   }
