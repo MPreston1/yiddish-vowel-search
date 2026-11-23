@@ -100,13 +100,15 @@ function run(U, p, der) {
 }
 
 function analyse(row) {
-  const key = GENRE + '|' + bare(row.word), readings = cache[key];
+  const key = GENRE + '|' + bare(row.word), raw = cache[key], readings = raw && raw.length ? E.adapt(row.word, raw) : raw;
   const out = {row, readings: readings || [], status: '', engine: null, oracle: null, anyOk: false};
   if (!readings || !readings.length) { out.status = 'no nakdan result'; return out; }
   const der = /Derived, syllable-opening/.test(row.rule) ? 'open' : /Derived, all others/.test(row.rule) ? 'other' : 'no';
   if (der === 'other') { out.status = 'skipped (derived, needs base length)'; return out; }
   const isExc = row.follows.startsWith('exception');
-  const ok = (r, len) => r.rule === row.rule && (isExc || len === undefined || row.exp.some(e => e.len === r.len));
+  // Derived rules come late in the rule order, so an earlier rule may claim the word: for those rows only the length is compared.
+  const lenOk = r => row.exp.some(e => e.len === r.len);
+  const ok = r => der === 'open' ? lenOk(r) : r.rule === row.rule && (isExc || lenOk(r));
   let first = true;
   for (const reading of readings) {
     const U = E.parse(reading), p = E.guessStress(U);

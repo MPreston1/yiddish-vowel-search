@@ -127,16 +127,53 @@
     return RULES.map(r => { const [m, why] = T[r.k](); return {r, match: m, why}; });
   }
 
-  // Default stress: second to last vowel, ignoring furtive patah and reduced (hataf) vowels. Returns an index into units, or -1.
+  // Default stress: second to last vowel. Furtive patah and reduced (hataf) vowels do not count,
+  // except a hataf vowel at the very start of the word (אֱמת, אֲדם), which is a full syllable in Yiddish.
+  // Returns an index into units, or -1.
   function guessStress(U) {
     const nuclei = [];
     U.forEach((u, i) => { if (u.t === 'V' && !u.furtive) nuclei.push(i); });
     if (!nuclei.length) return -1;
-    const full = nuclei.filter(i => !/^h/.test(U[i].src)), cand = full.length ? full : nuclei;
+    const cand = nuclei.filter((i, k) => !['hsegol', 'hpatah', 'hqamats'].includes(U[i].src) || k === 0);
     return cand.length >= 2 ? cand[cand.length - 2] : cand[0];
   }
 
-  return {SOUNDS, parse, RULES, evaluate, guessStress};
+  // ---- making Nakdan's pointing agree with the marks the person typed (אָ, אַ, rafe) ----
+  const VOWEL_MARKS = /[\u05B0-\u05BB\u05C7]/g;
+  function lettersOf(word) {
+    const L = [];
+    for (const ch of word.normalize('NFD')) {
+      if (/[\u0591-\u05C7]/.test(ch) && L.length) L[L.length - 1].m.push(ch);
+      else if (/[\u05D0-\u05EA]/.test(ch)) L.push({o: ch, m: []});
+    }
+    return L;
+  }
+
+  // Returns the reading with the typed marks laid over it, or null if the reading has different letters from the typed word.
+  function adaptOne(input, reading) {
+    const A = lettersOf(input), B = lettersOf(reading);
+    if (A.length !== B.length || A.some((l, i) => l.o !== B[i].o)) return null;
+    B.forEach((l, i) => {
+      const a = A[i];
+      const v = a.m.find(m => m === '\u05B7' || m === '\u05B8');   // אַ or אָ typed on this letter
+      if (a.o === 'א' && v) l.m = l.m.filter(m => !/[\u05B0-\u05BB\u05C7]/.test(m)).concat(v);
+      if (a.m.includes('\u05BF')) l.m = l.m.filter(m => m !== '\u05BC');                 // typed rafe: no dagesh
+      else if (a.m.includes('\u05BC') && !l.m.includes('\u05BC')) l.m.push('\u05BC');   // typed dagesh
+    });
+    return B.map(l => l.o + l.m.join('')).join('').normalize('NFC');
+  }
+
+  // Adapted readings in Nakdan's order; readings with different letters from the typed word go last (or stay, if none agrees).
+  function adapt(input, readings) {
+    const good = [], rest = [];
+    for (const r of readings) {
+      const x = adaptOne(input, r);
+      if (x) { if (!good.includes(x)) good.push(x); } else rest.push(r);
+    }
+    return good.length ? good : rest;
+  }
+
+  return {SOUNDS, parse, RULES, evaluate, guessStress, adapt, adaptOne};
   })();
   if (typeof module !== 'undefined') module.exports = api; else root.LKEngine = api;
 })(typeof window !== 'undefined' ? window : globalThis);

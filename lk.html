@@ -164,7 +164,14 @@ ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
     if (!w) { showErr('Type a word first.'); return; }
     $('go').disabled = true; $('go').textContent = 'Working…';
     try {
-      const list = readings(await nakdan(w, $('genre').value));
+      let list = readings(await nakdan(w, $('genre').value));
+      // lay the marks typed by the person (אָ, אַ, rafe) over Nakdan's readings, and drop readings with different letters
+      const typed = $('word').value, seen = new Set(), fit = [];
+      for (const r of list) {
+        const x = LKEngine.adaptOne(typed, r.w);
+        if (x && !seen.has(x)) { seen.add(x); fit.push({w: x, info: r.info}); }
+      }
+      if (fit.length) list = fit;
       if (!list.length) {
         showErr('Nakdan gave no suggestion. You can type the pointed spelling yourself below, or look the word up.');
         chooseReading(w);
