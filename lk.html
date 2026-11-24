@@ -26,6 +26,7 @@ button.opt.sel{outline:2px solid var(--acc)}
 button.opt small{display:block;text-align:left;color:var(--mut);direction:ltr;font-size:.8rem}
 .err{color:var(--warn)}
 ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
+button.drop.on{text-decoration:line-through;opacity:.6;outline:2px solid var(--warn)}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -79,6 +80,10 @@ ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
   <p class="mut">The app reads the pointing as Ashkenazic Yiddish sounds (patah = a, qamats = o, segol = e, tsere = ey, holam = oy, hiriq = i, shuruk/qubuts = u) and guesses the stress. Check both, since they decide the result.</p>
   <p><strong>Stressed vowel</strong> (tap to change):</p>
   <div class="row" id="chips" dir="rtl"></div>
+  <div id="dropwrap" hidden>
+    <p><strong>Vowels not pronounced</strong> <span class="mut">(optional: tap a vowel that Yiddish drops, for example the qamats in רוחניות, so the rules see the word without it)</span></p>
+    <div class="row" id="dropchips" dir="rtl"></div>
+  </div>
   <div class="row">
     <label class="mut" for="snd">Sound of that vowel:</label>
     <select id="snd" style="width:auto"></select>
@@ -216,7 +221,7 @@ ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
 
   const {SOUNDS, parse, RULES, evaluate, guessStress} = LKEngine;
 
-  const S3 = {U: [], p: 0};
+  const S3 = {U: [], p: 0, drop: new Set()};
 
   function renderS3() {
     const U = S3.U, chips = $('chips');
@@ -224,15 +229,29 @@ ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
     U.forEach((u, i) => {
       if (u.t !== 'V' || u.furtive) return;
       const b = el('button', 'he' + (i === S3.p ? ' pri' : ''), u.s || '·'); b.type = 'button';
-      b.onclick = () => { S3.p = i; $('snd').value = U[i].v; $('dg').checked = !!(U[i + 1] && U[i + 1].t === 'C' && U[i + 1].dag); renderS3(); };
+      b.onclick = () => { S3.p = i; S3.drop.delete(i); $('snd').value = U[i].v; $('dg').checked = !!(U[i + 1] && U[i + 1].t === 'C' && U[i + 1].dag); renderS3(); };
       chips.append(b);
     });
     const p = S3.p;
+    const dc = $('dropchips'); dc.textContent = '';
+    U.forEach((u, i) => {
+      if (u.t !== 'V' || u.furtive || i === p) return;
+      const b = el('button', 'he drop' + (S3.drop.has(i) ? ' on' : ''), u.s || '·'); b.type = 'button';
+      b.onclick = () => { if (S3.drop.has(i)) S3.drop.delete(i); else S3.drop.add(i); renderS3(); };
+      dc.append(b);
+    });
+    $('dropwrap').hidden = !dc.children.length;
     const der = $('der').value;
     $('base').hidden = der !== 'other';
-    let V2 = U.map((u, i) => i === p ? Object.assign({}, u, {v: $('snd').value || u.v}) : u);
-    if ($('dg').checked && V2[p + 1] && V2[p + 1].t === 'C') V2[p + 1] = Object.assign({}, V2[p + 1], {dag: true});   // dagesh confirmed by the person
-    const res = evaluate(V2, p, der), win = res.find(x => x.match);
+    // the units the rules see: vowels marked as not pronounced are left out, so the consonants around them join up
+    const keep = []; let np = 0;
+    U.forEach((u, i) => {
+      if (S3.drop.has(i) && i !== p) return;
+      if (i === p) np = keep.length;
+      keep.push(i === p ? Object.assign({}, u, {v: $('snd').value || u.v}) : u);
+    });
+    if ($('dg').checked && keep[np + 1] && keep[np + 1].t === 'C') keep[np + 1] = Object.assign({}, keep[np + 1], {dag: true});   // dagesh confirmed by the person
+    const res = evaluate(keep, np, der), win = res.find(x => x.match);
     const R = $('result'); R.textContent = '';
     const out = win.r.k === 'dother' ? $('base').value : win.r.out;
     const box = el('div', 'card');
@@ -240,6 +259,7 @@ ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
     box.append(el('h2', '', 'Result: ' + out));
     box.append(el('p', '', 'Rule: ' + win.r.name));
     box.append(el('p', 'mut', win.r.desc));
+    if (S3.drop.size) box.append(el('p', 'mut', 'Treated as not pronounced: ' + [...S3.drop].sort((a, b) => a - b).map(i => U[i].s || '·').join(' ')));
     if (win.r.exc && win.r.exc !== 'none' && win.r.exc !== 'None') box.append(el('p', 'mut', 'Known exceptions: ' + win.r.exc));
     R.append(box);
     const A = $('analysis'); A.textContent = '';
@@ -258,6 +278,7 @@ ol.rules{padding-left:1.2em}ol.rules li{margin:.4em 0}
   function startS3(word) {
     const U = parse(word);
     S3.U = U;
+    S3.drop = new Set();
     const A = $('analysis');
     S3.p = guessStress(U);
     if (S3.p < 0) {

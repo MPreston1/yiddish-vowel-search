@@ -47,6 +47,19 @@ let rows = T.slice(1).filter(r => String(r[C.word]).trim() && /^LK:/i.test(Strin
     follows: String(r[C.follows]).trim().toLowerCase() || 'yes', exp};
 });
 rows = rows.filter(r => r.comp === 'loshn-koydesh' || (flag('nativized') && r.comp.startsWith('loshn-koydesh')));
+// Problems inside the Database itself, flagged in the report so they can be told apart from engine mistakes.
+const RULE_LEN = {'LK: {oye, o(y)i} with komets': 'Long', 'LK: V + {V, #}': 'Long', 'LK: V + {silent guttural}': 'Long', 'LK: Closed by consonant': 'Short',
+  'LK: e': 'Long', 'LK: o': 'Long', 'LK: V + {spirant + dagesh}': 'Short', 'LK: V + {spirant, no dagesh}': 'Long', 'LK: V + non-silent guttural': 'Long',
+  'LK: Closed by dagesh': 'Short', 'LK: Derived, syllable-opening': 'Long'};
+const seenWord = {};
+for (const r of rows) (seenWord[r.word] = seenWord[r.word] || []).push(r);
+for (const r of rows) {
+  r.flags = [];
+  if (!r.exp.length) r.flags.push('no vowel/length listed');
+  if (r.exp.length > 1) r.flags.push('two vowels/lengths listed');
+  if (r.follows === 'yes' && r.exp.length && RULE_LEN[r.rule] && !r.exp.some(e => e.len === RULE_LEN[r.rule])) r.flags.push(`listed as following the rule, but the rule gives ${RULE_LEN[r.rule]}`);
+  if (seenWord[r.word].length > 1) r.flags.push('spelling listed more than once');
+}
 if (!flag('compounds')) rows = rows.filter(r => !/[\s\-־()]/.test(r.word));
 const WHY = opt('why', '');
 if (WHY) rows = rows.filter(r => r.word.normalize('NFD').replace(/[\u0591-\u05C7]/g, '') === WHY.normalize('NFD').replace(/[\u0591-\u05C7]/g, ''));
@@ -122,7 +135,7 @@ function analyse(row) {
   if (der === 'other') { out.status = 'skipped (derived, needs base length)'; return out; }
   const isExc = row.follows.startsWith('exception');
   // Derived rules come late in the rule order, so an earlier rule may claim the word: for those rows only the length is compared.
-  const lenOk = r => row.exp.some(e => e.len === r.len);
+  const lenOk = r => !row.exp.length || row.exp.some(e => e.len === r.len);   // a row with no length listed is compared on the rule only
   const ok = r => der === 'open' ? lenOk(r) : r.rule === row.rule && (isExc || lenOk(r));
   let first = true;
   for (const reading of readings) {
@@ -184,6 +197,9 @@ function csv(v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' 
   console.log('\nResult per word (first Nakdan reading, default stress guess):');
   for (const [k, v] of Object.entries(by).sort((a, b) => b[1] - a[1])) console.log(`  ${String(v).padStart(4)}  ${k}`);
 
+  const flagged = R.filter(r => r.row.flags.length), badFlagged = flagged.filter(r => r.status !== 'ok' && !/^skipped/.test(r.status));
+  console.log(`\nDatabase flags: ${flagged.length} rows have a possible problem in the Database itself; ${badFlagged.length} of them are among the disagreements.`);
+
   // per database rule
   const pr = {};
   for (const r of R) { const x = pr[r.row.rule] = pr[r.row.rule] || {n: 0, ok: 0}; x.n++; if (r.status === 'ok') x.ok++; }
@@ -200,11 +216,11 @@ function csv(v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' 
   console.log('\nFirst disagreements:');
   for (const r of bad.slice(0, 15)) console.log(`  ${r.row.word}  [${r.reading || '-'}]  db: ${r.row.rule} (${r.row.follows})  engine: ${r.engine ? r.engine.rule + ' ' + r.engine.len : '-'}  — ${r.status}`);
 
-  const lines = [['word', 'nakdan_reading', 'other_readings', 'db_rule', 'db_follows', 'db_vowel_length', 'engine_rule', 'engine_length', 'oracle_rule', 'oracle_length', 'status', 'units (* = stressed)', 'stressed_vowel', 'after_stressed', 'why_engine_rule'].join(',')];
+  const lines = [['word', 'nakdan_reading', 'other_readings', 'db_rule', 'db_follows', 'db_vowel_length', 'engine_rule', 'engine_length', 'oracle_rule', 'oracle_length', 'status', 'units (* = stressed)', 'stressed_vowel', 'after_stressed', 'why_engine_rule', 'database_flags'].join(',')];
   for (const r of R) lines.push([r.row.word, r.reading || '', r.readings.slice(1).join(' | '), r.row.rule, r.row.follows,
     r.row.exp.map(e => `${e.len} [${e.v}]`).join(' + '), r.engine ? r.engine.rule : '', r.engine ? r.engine.len : '',
     r.oracle ? r.oracle.rule : '', r.oracle ? r.oracle.len : '', r.status,
-    r.units || '', r.stressed || '', r.after || '', r.engine ? r.engine.why : ''].map(csv).join(','));
+    r.units || '', r.stressed || '', r.after || '', r.engine ? r.engine.why : '', r.row.flags.join('; ')].map(csv).join(','));
   fs.writeFileSync(OUT, '\ufeff' + lines.join('\n'));
   console.log(`\nFull report: ${OUT}   (open in Excel or Numbers and filter on "status")`);
 })();

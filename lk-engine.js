@@ -5,7 +5,7 @@
   // ---- Step 3: rule engine (rules copied from the "Loshn-koydesh" section of the Rules tab, in the same order) ----
   const FINAL = {'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ'};
   const VM = {'\u05B1': ['e', 'hsegol'], '\u05B2': ['a', 'hpatah'], '\u05B3': ['o', 'hqamats'], '\u05B4': ['i', 'hiriq'],
-    '\u05B5': ['ey', 'tsere'], '\u05B6': ['e', 'segol'], '\u05B7': ['a', 'patah'], '\u05B8': ['o', 'qamats'],
+    '\u05B5': ['e', 'tsere'], '\u05B6': ['e', 'segol'], '\u05B7': ['a', 'patah'], '\u05B8': ['o', 'qamats'],
     '\u05C7': ['o', 'qamats'], '\u05B9': ['oy', 'holam'], '\u05BB': ['u', 'qubuts']};
   const HOLAM_MALE = (typeof process !== 'undefined' && process.env.LK_HOLAM) || 'u';   // sound given to a vav with holam
   const SOUNDS = ['a', 'e', 'ey', 'i', 'o', 'oy', 'u', 'ay'];
@@ -24,13 +24,17 @@
     for (let i = 0; i < L.length; i++) {
       const l = L[i], c = l.c, vm = vowelOf(l), dag = l.m.includes(DAG), end = i === L.length - 1, pu = U[U.length - 1];
       if (c === 'ו') {
-        if (vm && vm[1] === 'holam' && pu && pu.t === 'C') V([HOLAM_MALE, 'holam'], l.txt);   // holam male
-        else if (!vm && dag && pu && pu.t === 'C') V(['u', 'shuruk'], l.txt);                     // shuruk
+        if (vm && vm[1] === 'holam' && pu && (pu.t === 'C' || pu.yodDag)) V([HOLAM_MALE, 'holam'], l.txt);   // holam male
+        else if (!vm && dag && pu && (pu.t === 'C' || pu.yodDag)) V(['u', 'shuruk'], l.txt);                     // shuruk
         else { U.push({t: 'C', c: 'װ', dag}); if (vm) V(vm, l.txt); }
         continue;
       }
       if (c === 'י') {
         if (vm) { U.push({t: 'C', c: 'י', dag}); V(vm, l.txt); }
+        else if (dag && pu && pu.t === 'V' && pu.src === 'hiriq' && L[i + 1] && L[i + 1].c === 'ו' && !vowelOf(L[i + 1]) === !L[i + 1].m.includes('\u05B9') && (L[i + 1].m.includes(DAG) || L[i + 1].m.includes('\u05B9'))) {
+          pu.s += l.txt; pu.yodDag = true;                                                          // ִיּוּ / ִיּוֹ: the yod is a vowel letter and the vav is a vowel (Yiddish ציון, חיוב, איוב)
+        }
+        else if (dag) U.push({t: 'C', c: 'י', dag});                                                // yod with dagesh is a doubled consonant, not a vowel letter
         else if (pu && pu.t === 'V' && ['hiriq', 'tsere', 'segol'].includes(pu.src)) pu.s += l.txt;   // mater
         else if (pu && pu.t === 'V' && !pu.furtive && ['patah', 'qamats', 'holam'].includes(pu.src)) {
           pu.s += l.txt; pu.v = pu.src === 'patah' ? 'ay' : 'oy';                                   // diphthong
@@ -102,7 +106,9 @@
     let j = p + 1;
     while (j < U.length && U[j].t === 'C') cons.push(U[j++]);
     const nxt = U[j], atEnd = !nxt, f = cons[0], fc = f ? f.c : null;
-    const nC = cons.length + (nxt && nxt.g && cons.length ? 1 : 0);   // a guttural that carries the next vowel still counts as a consonant after a real one
+    const eff = cons.slice();
+    while (atEnd && eff.length > 1 && eff[eff.length - 1].silentG) eff.pop();   // a silent final א ה ע does not count (חֵטְא: one consonant)
+    const nC = eff.length + (nxt && nxt.g && cons.length ? 1 : 0);   // a guttural that carries the next vowel still counts as a consonant after a real one
     const after = cons.length ? cons.map(x => x.c).join(' ') : (atEnd ? 'the end of the word' : 'a vowel');
     const n1 = U[p + 1], n2 = U[p + 2];
     const T = {
@@ -138,8 +144,18 @@
     U.forEach((u, i) => { if (u.t === 'V' && !u.furtive) nuclei.push(i); });
     if (!nuclei.length) return -1;
     const fur = U.findIndex(u => u.furtive);
-    if (fur > 0) { const before = nuclei.filter(i => i < fur); if (before.length) return before[before.length - 1]; }   // בטוּחַ: stress right before the furtive patah
-    const cand = nuclei.filter((i, k) => !['hsegol', 'hpatah', 'hqamats'].includes(U[i].src) || k === 0);
+    if (fur > 0) {
+      // stress the vowel before the furtive patah only if it is a plene vowel (shuruk, holam, hiriq + yod: בטוּחַ, משיחַ);
+      // after a plain e (מְשֻׁגֵּעַ, נוֹסֵחַ) the e is the unstressed ending and the usual second-to-last rule applies
+      const before = nuclei.filter(i => i < fur), lastB = before[before.length - 1];
+      if (lastB !== undefined) {
+        const v = U[lastB];
+        if (v.src === 'shuruk' || v.src === 'holam' || (v.src === 'hiriq' && /י/.test(v.s))) return lastB;
+      }
+    }
+    // the article הַ- before a doubled consonant (הַשֵּׁם) is an unstressed prefix, not a stress candidate
+    const art = nuclei.length >= 2 && nuclei[0] === 0 && U[0].g === 'ה' && U[0].src === 'patah' && U[1] && U[1].t === 'C' && U[1].dag;
+    const cand = nuclei.filter((i, k) => (!['hsegol', 'hpatah', 'hqamats'].includes(U[i].src) || k === 0) && !(art && k === 0));
     return cand.length >= 2 ? cand[cand.length - 2] : cand[0];
   }
 
