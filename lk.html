@@ -227,7 +227,7 @@ button.drop.on{text-decoration:line-through;opacity:.6;outline:2px solid var(--w
     const U = S3.U, chips = $('chips');
     chips.textContent = '';
     U.forEach((u, i) => {
-      if (u.t !== 'V' || u.furtive) return;
+      if (u.t !== 'V' || u.furtive || u.src === 'sheva') return;   // a vocal sheva is not a stress candidate
       const b = el('button', 'he' + (i === S3.p ? ' pri' : ''), u.s || '·'); b.type = 'button';
       b.onclick = () => { S3.p = i; S3.drop.delete(i); $('snd').value = U[i].v; $('dg').checked = !!(U[i + 1] && U[i + 1].t === 'C' && U[i + 1].dag); renderS3(); };
       chips.append(b);

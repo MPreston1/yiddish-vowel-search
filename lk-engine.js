@@ -67,6 +67,9 @@
       }
       U.push({t: 'C', c, dag});
       if (vm) V(vm, l.txt);
+      else if (l.m.includes('\u05B0') && !end && i > 0 && L[i - 1].m.includes('\u05B0') && !vowelOf(L[i - 1])) {
+        U.push({t: 'V', v: 'e', src: 'sheva', s: ''});    // two shevas in a row: the second is vocal (יִרְמְיָה)
+      }
     }
     return U;
   }
@@ -155,7 +158,7 @@
     }
     // the article הַ- before a doubled consonant (הַשֵּׁם) is an unstressed prefix, not a stress candidate
     const art = nuclei.length >= 2 && nuclei[0] === 0 && U[0].g === 'ה' && U[0].src === 'patah' && U[1] && U[1].t === 'C' && U[1].dag;
-    const cand = nuclei.filter((i, k) => (!['hsegol', 'hpatah', 'hqamats'].includes(U[i].src) || k === 0) && !(art && k === 0));
+    const cand = nuclei.filter((i, k) => U[i].src !== 'sheva' && (!['hsegol', 'hpatah', 'hqamats'].includes(U[i].src) || k === 0) && !(art && k === 0));
     return cand.length >= 2 ? cand[cand.length - 2] : cand[0];
   }
 
