@@ -1,7 +1,7 @@
 // Offline support. The app "shell" (index.html + style.css + the JS files) is cached
 // as one set and always served from that set, so the HTML, CSS and JS can never
 // come from different releases. Every file the page loads must be listed in SHELL. Each time the app is opened, the service worker
-// re-downloads all three files in the background (bypassing the browser's HTTP
+// re-downloads all files in the background (bypassing the browser's HTTP
 // cache) and swaps in the new set only if every file arrived. A change you
 // deploy therefore shows up the next time the app is opened after it has
 // been loaded once; no version numbers to bump.
